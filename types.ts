@@ -14,13 +14,20 @@ export interface IconAiMetadata {
 
 export type ViewportSize = 16 | 24 | 32;
 export type Weighting = 'regular' | 'medium' | 'bold';
-export type TabType = 'grid' | 'list';
+export type TabType = 'grid' | 'list' | 'playground' | 'generator';
 
 export interface Collection {
   id: string;
   name: string;
   iconIds: string[];
   createdAt: number;
+}
+
+export interface IconTransform {
+  rotate: number;
+  scale: number;
+  flipH: boolean;
+  flipV: boolean;
 }
 
 export interface AppSettings {
@@ -31,6 +38,7 @@ export interface AppSettings {
   primaryFont: string;
   monoFont: string;
   semanticSearchEnabled: boolean;
+  aiEnabled: boolean;
 }
 
 export interface AppState {

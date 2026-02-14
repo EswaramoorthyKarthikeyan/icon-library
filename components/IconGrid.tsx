@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { IconData, ViewportSize } from '../types';
+import { IconData, ViewportSize, IconTransform } from '../types';
 
 interface IconGridProps {
   title: string;
@@ -14,6 +14,7 @@ interface IconGridProps {
   weighting: string;
   viewportSize: ViewportSize;
   aiMatchedIds?: string[] | null;
+  transform: IconTransform;
 }
 
 const IconGrid: React.FC<IconGridProps> = ({
@@ -27,7 +28,8 @@ const IconGrid: React.FC<IconGridProps> = ({
   onToggle,
   weighting,
   viewportSize,
-  aiMatchedIds
+  aiMatchedIds,
+  transform
 }) => {
   const getStrokeWidth = () => {
     switch(weighting) {
@@ -35,6 +37,13 @@ const IconGrid: React.FC<IconGridProps> = ({
       case 'bold': return 3;
       default: return 1.5;
     }
+  };
+
+  // Calculate transform style for icons based on batch transform settings
+  const getTransformStyle = () => {
+    return {
+      transform: `rotate(${transform.rotate}deg) scale(${transform.scale}) ${transform.flipH ? 'scaleX(-1)' : ''} ${transform.flipV ? 'scaleY(-1)' : ''}`
+    };
   };
 
   return (
@@ -99,7 +108,7 @@ const IconGrid: React.FC<IconGridProps> = ({
               {/* Icon Container */}
               <div className="flex items-center justify-center mb-5" style={{ width: '56px', height: '56px' }} aria-hidden="true">
                 <svg 
-                  style={{ width: `${viewportSize}px`, height: `${viewportSize}px` }}
+                  style={{ width: `${viewportSize}px`, height: `${viewportSize}px`, ...getTransformStyle() }}
                   className={`transition-all group-hover:scale-110 ${activeId === icon.id ? 'text-accent drop-shadow-[0_0_2px_rgba(0,0,0,0.1)]' : 'text-black/70 dark:text-white/60 group-hover:text-black dark:group-hover:text-white'}`} 
                   fill="none" 
                   stroke="currentColor" 

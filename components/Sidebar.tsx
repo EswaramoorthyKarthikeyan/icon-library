@@ -1,6 +1,6 @@
 
-import React, { useMemo } from 'react';
-import { ViewportSize, Weighting, Collection } from '../types.ts';
+import React from 'react';
+import { ViewportSize, Weighting, Collection, IconTransform } from '../types.ts';
 import { ICON_LIBRARY } from '../constants.tsx';
 
 interface SidebarProps {
@@ -20,256 +20,155 @@ interface SidebarProps {
   setAccentColor: (color: string) => void;
   selectedCount: number;
   onExport: () => void;
+  aiEnabled: boolean;
   semanticSearchEnabled: boolean;
   setSemanticSearchEnabled: (val: boolean) => void;
   isAiSearching: boolean;
+  transform: IconTransform;
+  setTransform: (t: IconTransform) => void;
 }
 
-const CONTRAST_COLORS = [
-  { name: 'Default', value: '' },
-  { name: 'Cyber Blue', value: '#2563eb' },
-  { name: 'Neon Green', value: '#16a34a' },
-  { name: 'Hot Pink', value: '#db2777' },
-  { name: 'Gold', value: '#ca8a04' },
-  { name: 'Crimson', value: '#dc2626' },
-  { name: 'Purple', value: '#7c3aed' },
+const ACCENT_PRESETS = [
+  { name: 'Classic', color: '' }, // Empty defaults to black/white
+  { name: 'Indigo', color: '#6366f1' },
+  { name: 'Cyber', color: '#10b981' },
+  { name: 'Solar', color: '#f59e0b' },
+  { name: 'Crimson', color: '#ef4444' },
+  { name: 'Violet', color: '#8b5cf6' },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({
-  viewportSize,
-  setViewportSize,
-  weighting,
-  setWeighting,
-  searchQuery,
-  setSearchQuery,
-  selectedCategory,
-  setSelectedCategory,
-  collections,
-  activeCollectionId,
-  setActiveCollectionId,
-  onDeleteCollection,
-  accentColor,
-  setAccentColor,
-  selectedCount,
-  onExport,
-  semanticSearchEnabled,
-  setSemanticSearchEnabled,
-  isAiSearching
+  viewportSize, setViewportSize, weighting, setWeighting, searchQuery, setSearchQuery,
+  selectedCategory, setSelectedCategory, collections, activeCollectionId, setActiveCollectionId,
+  onDeleteCollection, accentColor, setAccentColor, selectedCount, onExport,
+  aiEnabled, semanticSearchEnabled, setSemanticSearchEnabled, isAiSearching, transform, setTransform
 }) => {
-  const isSearching = searchQuery.trim() !== '';
-
-  const totalMatches = useMemo(() => {
-    return Object.values(ICON_LIBRARY).flat().filter(icon => 
-      icon.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      icon.id.toLowerCase().includes(searchQuery.toLowerCase())
-    ).length;
-  }, [searchQuery]);
-
-  const categoryMatches = useMemo(() => {
-    const counts: Record<string, number> = {};
-    Object.entries(ICON_LIBRARY).forEach(([category, icons]) => {
-      counts[category] = icons.filter(icon => 
-        icon.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        icon.id.toLowerCase().includes(searchQuery.toLowerCase())
-      ).length;
-    });
-    return counts;
-  }, [searchQuery]);
-
   return (
-    <aside className="w-72 flex-shrink-0 bg-white dark:bg-[#0a0a0a] border-r border-black/15 dark:border-white/10 h-screen flex flex-col p-6 overflow-y-auto transition-colors duration-300 shadow-xl z-[60]" aria-label="Library Controls">
-      <div className="mb-10">
+    <aside className="w-72 flex-shrink-0 bg-white dark:bg-[#0a0a0a] border-r border-black/15 dark:border-white/10 h-screen flex flex-col p-6 overflow-y-auto transition-colors z-[60] custom-scrollbar">
+      {/* Branding */}
+      <div className="mb-8">
         <div className="flex items-center gap-2 mb-1">
-          <div className="w-3 h-3 bg-accent shadow-[0_0_8px_var(--system-accent)]" aria-hidden="true"></div>
-          <h1 className="text-black dark:text-white font-black text-[11px] tracking-[0.2em] uppercase transition-colors">Core UI System</h1>
+          <div className="w-3 h-3 bg-accent shadow-[0_0_8px_var(--system-accent)] transition-all duration-300"></div>
+          <h1 className="text-black dark:text-white font-black text-[11px] tracking-[0.2em] uppercase">Core UI System</h1>
         </div>
-        <span className="text-[9px] font-mono text-black/50 dark:text-white/30 tracking-wider">DS_EXPLORER_V4.0.2</span>
+        <span className="text-[9px] font-mono opacity-30 tracking-wider">DS_EXPLORER_V5.0.0</span>
       </div>
 
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-3">
-          <label htmlFor="global-search" className="text-[10px] font-bold text-black/60 dark:text-white/40 uppercase tracking-[0.15em] block">
-            Global Search
-          </label>
-          <button 
-            onClick={() => setSemanticSearchEnabled(!semanticSearchEnabled)}
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all ${semanticSearchEnabled ? 'bg-accent/10 border-accent text-accent' : 'bg-black/5 dark:bg-white/5 border-transparent text-black/40 dark:text-white/20 hover:text-black dark:hover:text-white'}`}
-            title="Toggle Semantic AI Search"
-          >
-            <div className={`w-1.5 h-1.5 rounded-full ${semanticSearchEnabled ? 'bg-accent animate-pulse' : 'bg-current opacity-30'}`}></div>
-            <span className="text-[8px] font-black uppercase tracking-widest">Semantic_AI</span>
-          </button>
-        </div>
-        <div className="relative group">
-          {isAiSearching ? (
-             <div className="absolute left-3 top-3 w-3 h-3 border border-accent border-t-transparent rounded-full animate-spin"></div>
-          ) : (
-            <svg className={`absolute left-3 top-2.5 w-4 h-4 transition-colors ${isSearching ? 'text-accent' : 'text-black/40 dark:text-white/20'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          )}
-          <input 
-            id="global-search"
-            type="text" 
-            placeholder={semanticSearchEnabled ? "Search concepts (e.g. 'home control')..." : "Search all assets..."} 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full bg-black/[0.05] dark:bg-white/[0.03] border rounded-md py-2.5 pl-9 pr-8 text-[12px] font-mono text-black dark:text-white focus:outline-none transition-all placeholder:text-black/30 dark:placeholder:text-white/10 ${isSearching ? 'border-accent/60 bg-accent/[0.05]' : 'border-black/20 dark:border-white/10 focus:border-accent shadow-sm'}`}
-          />
-          {isSearching && (
+      {/* Global Search & AI Toggle */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <label className="text-[10px] font-black opacity-40 uppercase tracking-widest">Global Search</label>
+          {aiEnabled && (
             <button 
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-2.5 p-1 text-black/40 dark:text-white/20 hover:text-accent transition-colors"
-              aria-label="Clear search"
+              onClick={() => setSemanticSearchEnabled(!semanticSearchEnabled)} 
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-full border transition-all ${semanticSearchEnabled ? 'bg-accent/10 border-accent text-accent' : 'bg-black/5 dark:bg-white/5 border-transparent opacity-40'}`}
+              aria-label="Toggle AI semantic search"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <span className="text-[8px] font-black uppercase">AI_Search</span>
+              {isAiSearching && <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>}
             </button>
           )}
         </div>
+        <input 
+          type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={aiEnabled && semanticSearchEnabled ? "Concept search..." : "Search ID..."}
+          className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded px-3 py-2 text-[12px] font-mono focus:border-accent focus:outline-none transition-colors"
+        />
       </div>
 
-      <div className={`mb-8 transition-all duration-300`} role="group" aria-labelledby="library-sets-label">
-        <h2 id="library-sets-label" className="text-[10px] font-bold text-black/60 dark:text-white/40 uppercase tracking-[0.15em] mb-3 block">
-          Library Sets
-        </h2>
-        <div className="space-y-1.5">
-          <button 
-            onClick={() => { setSelectedCategory(null); setActiveCollectionId(null); }}
-            className={`w-full text-left border rounded-md p-2.5 flex items-center justify-between group cursor-pointer transition-all ${selectedCategory === null && activeCollectionId === null ? 'bg-black/[0.1] dark:bg-white/[0.08] border-black/30 dark:border-white/20 shadow-sm' : 'bg-black/[0.03] dark:bg-white/[0.03] border-black/10 dark:border-white/5 hover:bg-black/[0.06] dark:hover:bg-white/[0.05]'}`}
-            aria-pressed={selectedCategory === null && activeCollectionId === null}
-          >
-            <div className="flex items-center gap-3">
-              <svg className={`w-4 h-4 ${selectedCategory === null && activeCollectionId === null ? 'text-accent' : 'text-black/60 dark:text-white/60'}`} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
-              <span className={`text-[12px] font-bold transition-colors ${selectedCategory === null && activeCollectionId === null ? 'text-black dark:text-white' : 'text-black/70 dark:text-white/80'}`}>All Assets</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className={`text-[9px] font-mono font-bold ${isSearching && totalMatches > 0 ? 'text-accent' : 'text-black/40 dark:text-white/30'}`}>
-                {isSearching ? `${totalMatches}` : Object.values(ICON_LIBRARY).flat().length}
-              </span>
-            </div>
-          </button>
-          
-          <div className="pl-6 space-y-3 py-3 border-l-2 border-black/10 dark:border-white/5 ml-2.5" role="list">
-            {Object.entries(ICON_LIBRARY).map(([category, icons]) => (
-              <button 
-                key={category} 
-                onClick={() => setSelectedCategory(category)}
-                className={`flex items-center justify-between w-full text-[11px] uppercase tracking-wider transition-colors hover:text-accent font-semibold ${selectedCategory === category ? 'text-accent font-black' : 'text-black/50 dark:text-white/40'} ${isSearching && categoryMatches[category] === 0 ? 'opacity-20' : ''}`}
-                aria-pressed={selectedCategory === category}
-                role="listitem"
+      {/* System Theme / Accent Options */}
+      <div className="mb-8 space-y-3">
+        <label className="text-[10px] font-black opacity-40 uppercase tracking-widest">System_Accent</label>
+        <div className="flex flex-wrap gap-2">
+          {ACCENT_PRESETS.map((preset) => (
+            <button
+              key={preset.name}
+              onClick={() => setAccentColor(preset.color)}
+              className={`w-6 h-6 rounded-full border-2 transition-all ${accentColor === preset.color ? 'border-accent scale-110 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'}`}
+              style={{ backgroundColor: preset.color || (document.documentElement.classList.contains('dark') ? '#ffffff' : '#000000') }}
+              title={preset.name}
+            />
+          ))}
+          <input 
+            type="color" 
+            value={accentColor || '#000000'} 
+            onChange={(e) => setAccentColor(e.target.value)}
+            className="w-6 h-6 rounded-full overflow-hidden border-0 cursor-pointer p-0 bg-transparent"
+          />
+        </div>
+      </div>
+
+      {/* Primary Config: Scale & Weight */}
+      <div className="mb-8 space-y-6">
+        <div className="space-y-3">
+          <label className="text-[10px] font-black opacity-40 uppercase tracking-widest">System_Scale</label>
+          <div className="grid grid-cols-3 gap-1 p-1 bg-black/5 dark:bg-white/5 rounded-lg border border-black/5 dark:border-white/5">
+            {([16, 24, 32] as ViewportSize[]).map((size) => (
+              <button
+                key={size}
+                onClick={() => setViewportSize(size)}
+                className={`py-1.5 text-[10px] font-black rounded transition-all ${viewportSize === size ? 'bg-white dark:bg-black text-accent shadow-sm' : 'opacity-40 hover:opacity-100'}`}
               >
-                <span>{category}</span>
-                <span className={`text-[9px] font-mono transition-colors ${isSearching && categoryMatches[category] > 0 ? 'text-accent font-black' : 'opacity-60'}`}>
-                  {isSearching ? `[${categoryMatches[category]}]` : `[${icons.length}]`}
-                </span>
+                {size}px
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-[10px] font-black opacity-40 uppercase tracking-widest">Stroke_Weight</label>
+          <div className="grid grid-cols-3 gap-1 p-1 bg-black/5 dark:bg-white/5 rounded-lg border border-black/5 dark:border-white/5">
+            {(['regular', 'medium', 'bold'] as Weighting[]).map((w) => (
+              <button
+                key={w}
+                onClick={() => setWeighting(w)}
+                className={`py-1.5 text-[9px] font-black uppercase rounded transition-all ${weighting === w ? 'bg-white dark:bg-black text-accent shadow-sm' : 'opacity-40 hover:opacity-100'}`}
+              >
+                {w.slice(0, 3)}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="mb-8" role="group" aria-labelledby="collections-label">
-        <h2 id="collections-label" className="text-[10px] font-bold text-black/60 dark:text-white/40 uppercase tracking-[0.15em] mb-3 block flex items-center justify-between">
-          User Collections
-          {collections.length > 0 && <span className="text-[8px] px-1.5 py-0.5 bg-accent/10 text-accent rounded-full">{collections.length}</span>}
-        </h2>
-        {collections.length === 0 ? (
-          <div className="p-4 border border-dashed border-black/10 dark:border-white/10 rounded-lg text-center bg-black/[0.02] dark:bg-white/[0.01]">
-            <p className="text-[9px] font-mono text-black/30 dark:text-white/20 uppercase tracking-widest leading-relaxed">No custom workspaces defined.</p>
-          </div>
-        ) : (
-          <div className="space-y-1.5" role="list">
-            {collections.map((col) => (
-              <div key={col.id} className="group relative flex items-center">
-                <button 
-                  onClick={() => setActiveCollectionId(col.id)}
-                  className={`flex-1 text-left border rounded-md p-2.5 pr-8 flex items-center justify-between transition-all ${activeCollectionId === col.id ? 'bg-accent/10 border-accent/30 shadow-sm' : 'bg-black/[0.03] dark:bg-white/[0.03] border-black/10 dark:border-white/5 hover:bg-black/[0.06] dark:hover:bg-white/[0.05]'}`}
-                >
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <svg className={`w-4 h-4 shrink-0 ${activeCollectionId === col.id ? 'text-accent' : 'text-black/40 dark:text-white/40'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-                    <span className={`text-[12px] font-bold truncate ${activeCollectionId === col.id ? 'text-accent' : 'text-black/70 dark:text-white/80'}`}>{col.name}</span>
-                  </div>
-                  <span className="text-[9px] font-mono opacity-40">[{col.iconIds.length}]</span>
-                </button>
-                <button 
-                  onClick={() => onDeleteCollection(col.id)}
-                  className="absolute right-2 opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-all"
-                  aria-label={`Delete ${col.name}`}
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Batch Transformation Engine */}
+      <div className="mb-8 p-4 bg-accent/[0.03] border border-accent/10 rounded-xl space-y-4 transition-colors">
+        <h2 className="text-[10px] font-black text-accent uppercase tracking-widest">Batch_Transform</h2>
+        
+        <div className="space-y-2">
+           <div className="flex justify-between text-[9px] font-black opacity-40 uppercase"><span>Rotate</span><span>{transform.rotate}°</span></div>
+           <input type="range" min="0" max="270" step="90" value={transform.rotate} onChange={(e) => setTransform({...transform, rotate: parseInt(e.target.value)})} className="w-full accent-accent" />
+        </div>
 
-      <div className="mb-8" role="group" aria-labelledby="system-contrast-label">
-        <label id="system-contrast-label" className="text-[10px] font-bold text-black/60 dark:text-white/40 uppercase tracking-[0.15em] mb-4 block">System Contrast</label>
-        <div className="flex flex-wrap gap-2.5">
-          {CONTRAST_COLORS.map((color) => (
-            <button
-              key={color.name}
-              onClick={() => setAccentColor(color.value)}
-              className={`w-7 h-7 rounded-full border-2 transition-all shadow-sm ${accentColor === color.value ? 'border-accent scale-125 shadow-md z-10' : 'border-transparent opacity-80 hover:opacity-100 hover:scale-110'}`}
-              style={{ backgroundColor: color.value || (accentColor === '' ? 'var(--system-accent)' : 'transparent') }}
-              aria-label={`Set accent color to ${color.name}`}
-              aria-pressed={accentColor === color.value}
-            >
-              {!color.value && <div className="w-full h-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-[18px] leading-none font-bold" aria-hidden="true">×</div>}
-            </button>
-          ))}
+        <div className="space-y-2">
+           <div className="flex justify-between text-[9px] font-black opacity-40 uppercase"><span>Scale</span><span>{Math.round(transform.scale * 100)}%</span></div>
+           <input type="range" min="0.5" max="1.5" step="0.1" value={transform.scale} onChange={(e) => setTransform({...transform, scale: parseFloat(e.target.value)})} className="w-full accent-accent" />
+        </div>
+
+        <div className="flex gap-2">
+          <button onClick={() => setTransform({...transform, flipH: !transform.flipH})} className={`flex-1 py-1.5 border rounded text-[8px] font-black uppercase transition-all ${transform.flipH ? 'bg-accent text-white dark:text-black border-accent' : 'border-black/10 dark:border-white/10 opacity-60'}`}>Flip_H</button>
+          <button onClick={() => setTransform({...transform, flipV: !transform.flipV})} className={`flex-1 py-1.5 border rounded text-[8px] font-black uppercase transition-all ${transform.flipV ? 'bg-accent text-white dark:text-black border-accent' : 'border-black/10 dark:border-white/10 opacity-60'}`}>Flip_V</button>
         </div>
       </div>
 
-      <div className="mb-8" role="group" aria-labelledby="viewport-size-label">
-        <label id="viewport-size-label" className="text-[10px] font-bold text-black/60 dark:text-white/40 uppercase tracking-[0.15em] mb-3 block">Viewport Size</label>
-        <div className="flex gap-1 bg-black/[0.08] dark:bg-white/[0.05] p-1 border border-black/20 dark:border-white/10 rounded-md shadow-inner">
-          {[16, 24, 32].map((size) => (
-            <button
-              key={size}
-              onClick={() => setViewportSize(size as ViewportSize)}
-              className={`flex-1 py-2 text-[11px] font-mono transition-all rounded-sm ${viewportSize === size ? 'bg-accent text-white dark:text-black font-black shadow-md scale-[1.02]' : 'text-black/60 dark:text-white/30 hover:text-black dark:hover:text-white'}`}
-              aria-pressed={viewportSize === size}
-            >
-              {size}px
-            </button>
-          ))}
-        </div>
+      {/* Library Navigation */}
+      <div className="space-y-1 mb-8">
+        <h2 className="text-[10px] font-black opacity-40 uppercase tracking-widest mb-3">Library_Manifest</h2>
+        <button onClick={() => { setSelectedCategory(null); setActiveCollectionId(null); }} className={`w-full text-left px-3 py-2 rounded text-[12px] font-bold transition-all ${!selectedCategory && !activeCollectionId ? 'bg-black/10 dark:bg-white/10 text-accent' : 'opacity-60 hover:opacity-100'}`}>All_Registry</button>
+        {Object.keys(ICON_LIBRARY).map(cat => (
+          <button key={cat} onClick={() => setSelectedCategory(cat)} className={`w-full text-left px-3 py-2 rounded text-[11px] uppercase tracking-wider transition-all ${selectedCategory === cat ? 'bg-accent/5 text-accent font-black' : 'opacity-40 hover:opacity-100'}`}>{cat}</button>
+        ))}
       </div>
 
-      <div className="mb-8" role="radiogroup" aria-labelledby="weighting-label">
-        <label id="weighting-label" className="text-[10px] font-bold text-black/60 dark:text-white/40 uppercase tracking-[0.15em] mb-4 block">Weighting</label>
-        <div className="space-y-4">
-          {(['regular', 'medium', 'bold'] as Weighting[]).map((w) => (
-            <label key={w} className="flex items-center gap-4 cursor-pointer group">
-              <div className="relative flex items-center justify-center">
-                <input 
-                  type="radio" 
-                  name="weight" 
-                  checked={weighting === w} 
-                  onChange={() => setWeighting(w)}
-                  className="appearance-none w-4 h-4 border-2 border-black/30 dark:border-white/20 rounded-full checked:border-accent transition-all bg-white dark:bg-black focus:ring-2 focus:ring-accent focus:ring-offset-2 dark:focus:ring-offset-black"
-                />
-                {weighting === w && <div className="absolute w-2 h-2 bg-accent rounded-full shadow-[0_0_4px_var(--system-accent)]" aria-hidden="true"></div>}
-              </div>
-              <span className={`text-[11px] font-bold capitalize transition-colors ${weighting === w ? 'text-black dark:text-white' : 'text-black/50 dark:text-white/40 group-hover:text-black dark:group-hover:text-white'}`}>
-                {w} <span className="font-mono text-[9px] opacity-60 ml-1" aria-hidden="true">({w === 'regular' ? '1.5px' : w === 'medium' ? '2.0px' : '3.0px'})</span>
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-auto pt-6 border-t border-black/20 dark:border-white/10">
+      {/* Bulk Action Footer */}
+      <div className="mt-auto pt-6 border-t border-black/10 dark:border-white/10">
         <button 
-          onClick={onExport}
-          className="w-full bg-accent text-white dark:text-black text-[11px] font-black uppercase tracking-[0.2em] py-4 rounded-md hover:brightness-110 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-3 focus:ring-2 focus:ring-accent focus:ring-offset-2 dark:focus:ring-offset-black"
+          onClick={onExport} 
+          disabled={selectedCount === 0}
+          className={`w-full py-4 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl transition-all active:scale-95 flex flex-col items-center gap-1 ${selectedCount > 0 ? 'bg-accent text-white dark:text-black' : 'bg-black/10 opacity-30 cursor-not-allowed'}`}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-          {selectedCount > 0 ? `Export ${selectedCount} Assets` : 'Export All Assets'}
+          <span>Export_Assets</span>
+          <span className="text-[8px] opacity-70">[{selectedCount}_Selected]</span>
         </button>
       </div>
     </aside>

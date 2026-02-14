@@ -5,9 +5,11 @@ import Header from './components/Header.tsx';
 import IconGrid from './components/IconGrid.tsx';
 import Inspector from './components/Inspector.tsx';
 import Footer from './components/Footer.tsx';
+import Playground from './components/Playground.tsx';
+import Generator from './components/Generator.tsx';
 import SettingsModal from './components/SettingsModal.tsx';
 import { ICON_LIBRARY } from './constants.tsx';
-import { ViewportSize, Weighting, TabType, IconData, AppSettings, Collection, IconAiMetadata } from './types.ts';
+import { ViewportSize, Weighting, TabType, IconData, AppSettings, Collection, IconAiMetadata, IconTransform } from './types.ts';
 import { GoogleGenAI, Type } from "@google/genai";
 import JSZip from 'jszip';
 
@@ -26,10 +28,19 @@ const App: React.FC = () => {
   const [accentColor, setAccentColor] = useState<string>('');
   const [customFillColor, setCustomFillColor] = useState<string>('none');
   
+  // Transformation State
+  const [transform, setTransform] = useState<IconTransform>({
+    rotate: 0,
+    scale: 1,
+    flipH: false,
+    flipV: false
+  });
+
   // AI State
   const [isAiSearching, setIsAiSearching] = useState(false);
   const [aiSearchResults, setAiSearchResults] = useState<string[] | null>(null);
   const [aiMetadataCache, setAiMetadataCache] = useState<Record<string, IconAiMetadata>>({});
+  const [relatedIconsCache, setRelatedIconsCache] = useState<Record<string, string[]>>({});
   const [isGeneratingMetadata, setIsGeneratingMetadata] = useState(false);
 
   // Selection & Collections State
@@ -52,62 +63,44 @@ const App: React.FC = () => {
     primaryFont: 'Inter',
     monoFont: 'JetBrains Mono',
     semanticSearchEnabled: false,
+    aiEnabled: true,
   });
 
-  // Effects: Initialize Collections from LocalStorage
+  // Switch to grid tab if AI is disabled while on Generator tab
+  useEffect(() => {
+    if (!settings.aiEnabled && activeTab === 'generator') {
+      setActiveTab('grid');
+    }
+  }, [settings.aiEnabled, activeTab]);
+
+  // helper to centralize settings updates
+  const handleUpdateSettings = (newSettings: Partial<AppSettings>) => {
+    setSettings(prev => ({ ...prev, ...newSettings }));
+  };
+
+  // Effects: Initialize & Sync
   useEffect(() => {
     const saved = localStorage.getItem('core_ui_collections');
     if (saved) {
-      try {
-        setCollections(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to load collections", e);
-      }
+      try { setCollections(JSON.parse(saved)); } catch (e) { console.error(e); }
     }
   }, []);
 
-  // Effects: Save Collections to LocalStorage
   useEffect(() => {
     localStorage.setItem('core_ui_collections', JSON.stringify(collections));
   }, [collections]);
 
-  // Effects: Accent & Theme
   useEffect(() => {
     const defaultColor = theme === 'dark' ? '#ffffff' : '#000000';
-    const finalAccent = accentColor || defaultColor;
-    document.documentElement.style.setProperty('--system-accent', finalAccent);
+    document.documentElement.style.setProperty('--system-accent', accentColor || defaultColor);
+    if (theme === 'dark') document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
   }, [theme, accentColor]);
 
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
-
-  // Effects: Typography
-  useEffect(() => {
-    const fontsToLoad = [settings.primaryFont, settings.monoFont];
-    const fontUrl = `https://fonts.googleapis.com/css2?family=${fontsToLoad.map(f => f.replace(/\s+/g, '+')).join('&family=')}:wght@400;500;600;700;800;900&display=swap`;
-    
-    let link = document.getElementById('google-fonts-link') as HTMLLinkElement;
-    if (!link) {
-      link = document.createElement('link');
-      link.id = 'google-fonts-link';
-      link.rel = 'stylesheet';
-      document.head.appendChild(link);
-    }
-    link.href = fontUrl;
-
-    document.documentElement.style.setProperty('--font-primary', `'${settings.primaryFont}', sans-serif`);
-    document.documentElement.style.setProperty('--font-mono', `'${settings.monoFont}', monospace`);
-  }, [settings.primaryFont, settings.monoFont]);
-
-  // Semantic Search Effect
+  // AI Semantic Search Effect
   useEffect(() => {
     const performSemanticSearch = async () => {
-      if (!settings.semanticSearchEnabled || !searchQuery.trim() || searchQuery.length < 3) {
+      if (!settings.aiEnabled || !settings.semanticSearchEnabled || !searchQuery.trim() || searchQuery.length < 3) {
         setAiSearchResults(null);
         return;
       }
@@ -115,8 +108,8 @@ const App: React.FC = () => {
       setIsAiSearching(true);
       try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const allIcons = Object.values(ICON_LIBRARY).flat();
-        const iconContext = allIcons.map(i => ({ id: i.id, name: i.name, category: i.category }));
+        const allIconsList = Object.values(ICON_LIBRARY).flat();
+        const iconContext = allIconsList.map(i => ({ id: i.id, name: i.name, category: i.category }));
 
         const response = await ai.models.generateContent({
           model: 'gemini-3-flash-preview',
@@ -149,26 +142,53 @@ const App: React.FC = () => {
 
     const timeout = setTimeout(performSemanticSearch, 600);
     return () => clearTimeout(timeout);
-  }, [searchQuery, settings.semanticSearchEnabled]);
+  }, [searchQuery, settings.semanticSearchEnabled, settings.aiEnabled]);
 
-  // AI Insights Effect
+  // AI Related Assets Logic
+  useEffect(() => {
+    const fetchRelated = async () => {
+      if (!settings.aiEnabled || !activeIconId || relatedIconsCache[activeIconId]) return;
+      const currentActive = Object.values(ICON_LIBRARY).flat().find(i => i.id === activeIconId);
+      if (!currentActive) return;
+
+      try {
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const allIconsList = Object.values(ICON_LIBRARY).flat();
+        const response = await ai.models.generateContent({
+          model: 'gemini-3-flash-preview',
+          contents: `Suggest 4 icon IDs from this library that are visually or conceptually related to "${currentActive.name}".
+          Library: ${JSON.stringify(allIconsList.map(i => ({ id: i.id, name: i.name })))}
+          Return only the array of IDs.`,
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                relatedIds: { type: Type.ARRAY, items: { type: Type.STRING } }
+              },
+              required: ['relatedIds']
+            }
+          }
+        });
+        const data = JSON.parse(response.text || '{"relatedIds": []}');
+        setRelatedIconsCache(prev => ({ ...prev, [activeIconId]: data.relatedIds }));
+      } catch (e) { console.error(e); }
+    };
+    fetchRelated();
+  }, [activeIconId, relatedIconsCache, settings.aiEnabled]);
+
+  // AI Metadata Effect
   useEffect(() => {
     const generateAiMetadata = async () => {
-      if (!activeIconId || aiMetadataCache[activeIconId] || isGeneratingMetadata) return;
-
-      const activeIcon = Object.values(ICON_LIBRARY).flat().find(i => i.id === activeIconId);
-      if (!activeIcon) return;
-
+      if (!settings.aiEnabled || !activeIconId || aiMetadataCache[activeIconId] || isGeneratingMetadata) return;
+      const currentActive = Object.values(ICON_LIBRARY).flat().find(i => i.id === activeIconId);
+      if (!currentActive) return;
       setIsGeneratingMetadata(true);
       try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
           model: 'gemini-3-flash-preview',
-          contents: `Generate professional UI design insights for the following icon:
-          Name: ${activeIcon.name}
-          Category: ${activeIcon.category}
-          
-          Provide a list of 4-6 semantic tags and a 1-sentence usage description.`,
+          contents: `Provide professional UI design insights for the icon "${currentActive.name}". Generate 4-6 semantic tags and a 1-sentence usage description.`,
           config: {
             responseMimeType: 'application/json',
             responseSchema: {
@@ -181,55 +201,34 @@ const App: React.FC = () => {
             }
           }
         });
-
-        const data = JSON.parse(response.text || '{"tags": [], "description": "No data available."}');
+        const data = JSON.parse(response.text || '{"tags": [], "description": "No context available."}');
         setAiMetadataCache(prev => ({ ...prev, [activeIconId]: data }));
-      } catch (e) {
-        console.error("AI Metadata generation failed", e);
-      } finally {
-        setIsGeneratingMetadata(false);
-      }
+      } catch (e) { console.error(e); }
+      finally { setIsGeneratingMetadata(false); }
     };
-
     generateAiMetadata();
-  }, [activeIconId, aiMetadataCache]);
+  }, [activeIconId, aiMetadataCache, isGeneratingMetadata, settings.aiEnabled]);
 
-  // Calculations
   const allIcons = useMemo(() => Object.values(ICON_LIBRARY).flat(), []);
-
-  const activeIcon = useMemo(() => {
-    return allIcons.find(i => i.id === activeIconId) || null;
-  }, [activeIconId, allIcons]);
+  const activeIcon = useMemo(() => allIcons.find(i => i.id === activeIconId) || null, [activeIconId, allIcons]);
 
   const filteredIconsList = useMemo(() => {
-    // If AI results are available and we are in semantic mode, prioritize them
-    if (settings.semanticSearchEnabled && aiSearchResults !== null && searchQuery.trim()) {
+    if (settings.aiEnabled && settings.semanticSearchEnabled && aiSearchResults !== null && searchQuery.trim()) {
       return allIcons.filter(icon => aiSearchResults.includes(icon.id));
     }
-
     let result = allIcons;
-    
-    // Filter by collection first if active
     if (activeCollectionId) {
-      const collection = collections.find(c => c.id === activeCollectionId);
-      if (collection) {
-        result = result.filter(icon => collection.iconIds.includes(icon.id));
-      }
+      const col = collections.find(c => c.id === activeCollectionId);
+      if (col) result = result.filter(icon => col.iconIds.includes(icon.id));
     } else if (selectedCategory) {
       result = ICON_LIBRARY[selectedCategory] || [];
     }
-
-    // Then filter by standard keyword search
-    if (searchQuery.trim() && !settings.semanticSearchEnabled) {
+    if (searchQuery.trim() && (!settings.aiEnabled || !settings.semanticSearchEnabled)) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(icon => 
-        icon.name.toLowerCase().includes(q) ||
-        icon.id.toLowerCase().includes(q)
-      );
+      result = result.filter(icon => icon.name.toLowerCase().includes(q) || icon.id.toLowerCase().includes(q));
     }
-
     return result;
-  }, [allIcons, searchQuery, selectedCategory, activeCollectionId, collections, settings.semanticSearchEnabled, aiSearchResults]);
+  }, [allIcons, searchQuery, selectedCategory, activeCollectionId, collections, settings.semanticSearchEnabled, aiSearchResults, settings.aiEnabled]);
 
   const categoriesToRender = useMemo(() => {
     if (activeCollectionId || searchQuery.trim() || selectedCategory) {
@@ -243,303 +242,125 @@ const App: React.FC = () => {
     return ICON_LIBRARY;
   }, [filteredIconsList, searchQuery, selectedCategory, activeCollectionId]);
 
-  const isSearching = searchQuery.trim() !== '';
-
-  // Handlers
-  const handleToggleSelection = (id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
-  const handleCreateCollection = () => {
-    if (selectedIds.size === 0) return;
-    const name = prompt("Enter a name for this collection:");
-    if (!name) return;
-
-    const newCollection: Collection = {
-      id: `col-${Date.now()}`,
-      name: name,
-      iconIds: Array.from(selectedIds),
-      createdAt: Date.now()
-    };
-
-    setCollections(prev => [...prev, newCollection]);
-    setSelectedIds(new Set());
-    alert(`Collection "${name}" created with ${newCollection.iconIds.length} assets.`);
-  };
-
-  const handleDeleteCollection = (id: string) => {
-    if (confirm("Permanently remove this collection? Assets will remain in the library.")) {
-      setCollections(prev => prev.filter(c => c.id !== id));
-      if (activeCollectionId === id) setActiveCollectionId(null);
-    }
-  };
-
-  const handleSetActiveIcon = (id: string) => {
-    setActiveIconId(id);
-  };
-
-  const handleClearSelection = () => {
-    setSelectedIds(new Set());
-  };
-
-  const handleSelectAllFiltered = () => {
-    const ids = filteredIconsList.map(icon => icon.id);
-    setSelectedIds(new Set(ids));
+  const handleCopySpec = () => {
+    if (!activeIcon) return;
+    const meta = aiMetadataCache[activeIcon.id];
+    const spec = `### ASSET SPECIFICATION: ${activeIcon.name.toUpperCase()}\n\n` +
+      `- **UID:** ${activeIcon.id}\n` +
+      `- **Category:** ${activeIcon.category}\n` +
+      (settings.aiEnabled ? `- **Tags:** ${meta?.tags.join(', ') || 'N/A'}\n` : '') +
+      (settings.aiEnabled ? `- **Usage:** ${meta?.description || 'N/A'}\n\n` : '\n') +
+      `**Batch Transformations Applied:**\n` +
+      `- Rotation: ${transform.rotate}°\n` +
+      `- Scale: ${transform.scale}x\n` +
+      `- Mirroring: ${transform.flipH ? 'Horizontal' : 'None'}, ${transform.flipV ? 'Vertical' : 'None'}\n\n` +
+      `**SVG Path Data:**\n\`\`\`\n${activeIcon.svgPath}\n\`\`\``;
+    
+    navigator.clipboard.writeText(spec);
+    alert("Full specification copied to clipboard in Markdown format.");
   };
 
   const handleExport = async () => {
     const itemsToExport = selectedIds.size > 0 
       ? allIcons.filter(icon => selectedIds.has(icon.id))
       : allIcons;
-      
     const zip = new JSZip();
-    const strokeWidthMap = { regular: 1.5, medium: 2, bold: 3 };
-    const currentStroke = strokeWidthMap[weighting];
-
+    const sw = weighting === 'bold' ? 3 : weighting === 'medium' ? 2 : 1.5;
+    
     itemsToExport.forEach(icon => {
-      const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="${customFillColor}" stroke="currentColor" stroke-width="${currentStroke}" stroke-linecap="round" stroke-linejoin="round">
-  <path d="${icon.svgPath}" />
+      const transformStr = `rotate(${transform.rotate} 12 12) scale(${transform.scale}) ${transform.flipH ? 'translate(24 0) scale(-1 1)' : ''} ${transform.flipV ? 'translate(0 24) scale(1 -1)' : ''}`;
+      const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="${customFillColor}" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="${transformStr}"><path d="${icon.svgPath}" /></g>
 </svg>`;
-      const path = settings.autoExportFolders ? `${icon.category}/${icon.name}.svg` : `${icon.name}.svg`;
-      zip.file(path, svgContent);
+      zip.file(`${settings.autoExportFolders ? icon.category + '/' : ''}${icon.name}.svg`, svgContent);
     });
-
     const blob = await zip.generateAsync({ type: 'blob' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `core_ui_export_${itemsToExport.length}_assets.zip`;
-    document.body.appendChild(a);
     a.click();
-    a.remove();
     URL.revokeObjectURL(url);
   };
 
-  const handleUpdateSettings = (newSettings: Partial<AppSettings>) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
-  };
-
-  const handleResetApp = () => {
-    if (confirm("Reset all system data, collections, and preferences?")) {
-      localStorage.removeItem('core_ui_collections');
-      setCollections([]);
-      setSettings({
-        showGrid: true,
-        gridOpacity: 0.08,
-        uiDensity: 'standard',
-        autoExportFolders: true,
-        primaryFont: 'Inter',
-        monoFont: 'JetBrains Mono',
-        semanticSearchEnabled: false,
-      });
-      setSelectedIds(new Set());
-      setActiveIconId(null);
-      setAccentColor('');
-      setSearchQuery('');
-      setIsSettingsOpen(false);
-    }
-  };
-
-  const EmptySearchState = () => (
-    <div className="flex flex-col items-center justify-center py-40 text-center animate-in fade-in zoom-in-95 duration-500" role="alert">
-      <div className="relative mb-8">
-        <svg className="w-20 h-20 text-black/10 dark:text-white/10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </div>
-      <h3 className="text-[14px] font-black uppercase tracking-[0.4em] mb-3 text-black/80 dark:text-white/80">Null Result Set</h3>
-      <p className="text-[11px] font-mono text-black/40 dark:text-white/30 max-w-sm mx-auto uppercase tracking-widest leading-relaxed">
-        {settings.semanticSearchEnabled ? "Semantic AI could not map your query to any known assets." : `No assets in the system registry match the identifier: "${searchQuery}"`}
-      </p>
-      <button 
-        onClick={() => { setSearchQuery(''); setSelectedCategory(null); setActiveCollectionId(null); setAiSearchResults(null); }}
-        className="mt-10 group relative px-8 py-3 overflow-hidden rounded-md border border-black/20 dark:border-white/20 hover:border-accent transition-colors focus:ring-2 focus:ring-accent"
-      >
-        <span className="relative text-[10px] font-black uppercase tracking-[0.3em] text-black dark:text-white">Reset Explorer State</span>
-      </button>
-    </div>
-  );
-
   return (
     <div className={`flex h-screen bg-[#f1f3f6] dark:bg-[#0a0a0a] text-[#1a1a1a] dark:text-[#e0e0e0] overflow-hidden transition-colors duration-300 ${settings.uiDensity === 'compact' ? 'density-compact' : ''}`}>
-      {/* LHS Sidebar */}
       <Sidebar 
-        viewportSize={viewportSize} 
-        setViewportSize={setViewportSize}
-        weighting={weighting}
-        setWeighting={setWeighting}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={(cat) => { setSelectedCategory(cat); setActiveCollectionId(null); }}
-        collections={collections}
-        activeCollectionId={activeCollectionId}
+        viewportSize={viewportSize} setViewportSize={setViewportSize}
+        weighting={weighting} setWeighting={setWeighting}
+        searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+        selectedCategory={selectedCategory} setSelectedCategory={(c) => { setSelectedCategory(c); setActiveCollectionId(null); }}
+        collections={collections} activeCollectionId={activeCollectionId}
         setActiveCollectionId={(id) => { setActiveCollectionId(id); setSelectedCategory(null); }}
-        onDeleteCollection={handleDeleteCollection}
-        accentColor={accentColor}
-        setAccentColor={setAccentColor}
-        selectedCount={selectedIds.size}
-        onExport={handleExport}
-        semanticSearchEnabled={settings.semanticSearchEnabled}
-        setSemanticSearchEnabled={(val) => handleUpdateSettings({ semanticSearchEnabled: val })}
+        onDeleteCollection={(id) => setCollections(prev => prev.filter(c => c.id !== id))}
+        accentColor={accentColor} setAccentColor={setAccentColor}
+        selectedCount={selectedIds.size} onExport={handleExport}
+        aiEnabled={settings.aiEnabled}
+        semanticSearchEnabled={settings.semanticSearchEnabled} setSemanticSearchEnabled={(v) => handleUpdateSettings({ semanticSearchEnabled: v })}
         isAiSearching={isAiSearching}
+        transform={transform} setTransform={setTransform}
       />
 
-      {/* Main Viewport */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative" role="main">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
         <Header 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
-          matchCount={filteredIconsList.length}
-          totalCount={allIcons.length}
-          isSearching={isSearching}
-          selectedCount={selectedIds.size}
-          onClearSelection={handleClearSelection}
-          onSelectAllFiltered={handleSelectAllFiltered}
-          onCreateCollection={handleCreateCollection}
+          activeTab={activeTab} setActiveTab={setActiveTab} 
+          matchCount={filteredIconsList.length} totalCount={allIcons.length}
+          isSearching={searchQuery.trim() !== ''} selectedCount={selectedIds.size}
+          onClearSelection={() => setSelectedIds(new Set())}
+          onSelectAllFiltered={() => setSelectedIds(new Set(filteredIconsList.map(i => i.id)))}
+          onCreateCollection={() => {
+            const name = prompt("Name:");
+            if (name) setCollections(prev => [...prev, { id: `c-${Date.now()}`, name, iconIds: Array.from(selectedIds), createdAt: Date.now() }]);
+          }}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          aiEnabled={settings.aiEnabled}
         />
 
         <div className="flex-1 flex overflow-hidden w-full relative">
-          <main 
-            className="flex-1 overflow-y-auto blueprint-grid relative transition-all duration-300 min-w-0"
-            style={{ 
-              backgroundImage: settings.showGrid ? undefined : 'none',
-              '--grid-opacity': settings.gridOpacity
-            } as any}
-          >
+          <main className="flex-1 overflow-y-auto blueprint-grid relative" style={{ backgroundImage: settings.showGrid ? undefined : 'none', '--grid-opacity': settings.gridOpacity } as any}>
             <div className={`w-full max-w-[1400px] mx-auto ${settings.uiDensity === 'compact' ? 'p-6' : 'p-10'}`}>
-              
               {activeTab === 'grid' && (
-                <div id="panel-grid" role="tabpanel" aria-labelledby="tab-grid" className="w-full">
-                  {(isSearching || activeCollectionId || selectedCategory) && filteredIconsList.length > 0 && (
-                    <div className="mb-8 animate-in fade-in slide-in-from-top-2 duration-500 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <h2 className="text-[14px] font-black uppercase tracking-[0.4em] text-black dark:text-white">
-                          {activeCollectionId ? `Viewing Collection: ${collections.find(c => c.id === activeCollectionId)?.name}` : 'Filtered Results'} — {filteredIconsList.length} assets
-                        </h2>
-                        {settings.semanticSearchEnabled && isSearching && (
-                          <span className="text-[9px] bg-accent/20 text-accent px-2 py-0.5 rounded-full font-black animate-pulse">SEMANTIC_AI_ACTIVE</span>
-                        )}
-                      </div>
-                      <button 
-                        onClick={() => { setActiveCollectionId(null); setSelectedCategory(null); setSearchQuery(''); setAiSearchResults(null); }}
-                        className="text-[10px] font-bold text-accent uppercase tracking-widest hover:underline"
-                      >
-                        Clear Filters ×
-                      </button>
-                    </div>
-                  )}
-
-                  {filteredIconsList.length > 0 ? (
-                    Object.entries(categoriesToRender).map(([category, icons], idx) => (
-                      <IconGrid 
-                        key={category}
-                        title={category}
-                        index={(idx + 1).toString().padStart(2, '0')}
-                        items={icons}
-                        itemCount={`${icons.length}_ITEMS`}
-                        activeId={activeIconId}
-                        selectedIds={selectedIds}
-                        onPreview={handleSetActiveIcon}
-                        onToggle={handleToggleSelection}
-                        weighting={weighting}
-                        viewportSize={viewportSize}
-                        aiMatchedIds={settings.semanticSearchEnabled ? aiSearchResults : null}
-                      />
-                    ))
-                  ) : (
-                    isAiSearching ? (
-                      <div className="flex flex-col items-center justify-center py-40">
-                         <div className="w-12 h-12 border-2 border-accent border-t-transparent rounded-full animate-spin mb-6"></div>
-                         <p className="text-[10px] font-black uppercase tracking-[0.4em] text-accent">Analyzing_Library_Context</p>
-                      </div>
-                    ) : (
-                      <EmptySearchState />
-                    )
-                  )}
-                </div>
+                Object.entries(categoriesToRender).map(([cat, icons], idx) => (
+                  <IconGrid 
+                    key={cat} title={cat} index={(idx+1).toString().padStart(2, '0')}
+                    items={icons} itemCount={icons.length.toString()}
+                    activeId={activeIconId} selectedIds={selectedIds}
+                    onPreview={setActiveIconId} onToggle={(id) => setSelectedIds(prev => {
+                      const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
+                    })}
+                    weighting={weighting} viewportSize={viewportSize}
+                    aiMatchedIds={(settings.aiEnabled && settings.semanticSearchEnabled) ? aiSearchResults : null}
+                    transform={transform}
+                  />
+                ))
               )}
 
-              {activeTab === 'list' && (
-                <div id="panel-list" role="tabpanel" aria-labelledby="tab-list" className="w-full">
-                  {filteredIconsList.length > 0 ? (
-                    <div className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-lg overflow-hidden shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse min-w-[600px]">
-                          <thead>
-                            <tr className="bg-black/[0.03] dark:bg-white/[0.03] border-b border-black/10 dark:border-white/10">
-                              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-black/40 dark:text-white/30">Symbol</th>
-                              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-black/40 dark:text-white/30">Identifier</th>
-                              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-black/40 dark:text-white/30">Category</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filteredIconsList.map((icon) => (
-                              <tr 
-                                key={icon.id} 
-                                onClick={() => handleSetActiveIcon(icon.id)}
-                                className={`border-b border-black/5 dark:border-white/5 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] cursor-pointer transition-colors ${activeIconId === icon.id ? 'ring-1 ring-inset ring-accent/30 bg-accent/5' : ''}`}
-                              >
-                                <td className="px-6 py-4 flex items-center gap-3">
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); handleToggleSelection(icon.id); }}
-                                    className={`w-4 h-4 border rounded-sm flex items-center justify-center transition-colors shrink-0 ${selectedIds.has(icon.id) ? 'bg-accent border-accent' : 'border-black/20 dark:border-white/20'}`}
-                                  >
-                                    {selectedIds.has(icon.id) && <svg className="w-3 h-3 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>}
-                                  </button>
-                                  <svg className="w-5 h-5 text-black/80 dark:text-white/80 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                                    <path d={icon.svgPath} />
-                                  </svg>
-                                </td>
-                                <td className="px-6 py-4 font-mono text-[12px] whitespace-nowrap">{icon.id}</td>
-                                <td className="px-6 py-4 text-[11px] font-bold text-black/60 dark:text-white/40 uppercase tracking-wider whitespace-nowrap">{icon.category}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  ) : (
-                    <EmptySearchState />
-                  )}
-                </div>
-              )}
+              {activeTab === 'playground' && <Playground icon={activeIcon} transform={transform} weighting={weighting} />}
+              {activeTab === 'generator' && settings.aiEnabled && <Generator />}
             </div>
           </main>
 
-          {/* RHS Inspector Sidebar */}
           <Inspector 
-            icon={activeIcon} 
-            viewportSize={viewportSize} 
-            weighting={weighting}
-            setWeighting={setWeighting}
-            isOpen={isInspectorOpen}
-            onToggle={() => setIsInspectorOpen(!isInspectorOpen)}
-            customFillColor={customFillColor}
-            setCustomFillColor={setCustomFillColor}
+            icon={activeIcon} viewportSize={viewportSize} 
+            weighting={weighting} setWeighting={setWeighting}
+            isOpen={isInspectorOpen} onToggle={() => setIsInspectorOpen(!isInspectorOpen)}
+            customFillColor={customFillColor} setCustomFillColor={setCustomFillColor}
+            aiEnabled={settings.aiEnabled}
             aiMetadata={activeIconId ? aiMetadataCache[activeIconId] : null}
             isGeneratingMetadata={isGeneratingMetadata}
+            relatedIconIds={activeIconId ? relatedIconsCache[activeIconId] : []}
+            onSelectIcon={setActiveIconId}
+            onCopySpec={handleCopySpec}
+            transform={transform}
           />
         </div>
-
         <Footer theme={theme} setTheme={setTheme} />
       </div>
 
       <SettingsModal 
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        settings={settings}
-        updateSettings={handleUpdateSettings}
-        onReset={handleResetApp}
+        isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)}
+        settings={settings} updateSettings={handleUpdateSettings}
+        onReset={() => { localStorage.clear(); window.location.reload(); }}
       />
     </div>
   );

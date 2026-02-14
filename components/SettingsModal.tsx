@@ -62,10 +62,42 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-8 space-y-10">
           
+          {/* Section: AI Intelligence Layer */}
+          <section className="space-y-6">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-accent flex items-center gap-2">
+              <span className="opacity-40">01</span> Intelligence_Layer
+            </h3>
+            
+            <div className="space-y-5">
+              <div className="flex items-center justify-between group">
+                <div>
+                  <p className="text-[12px] font-bold text-black dark:text-white">Enable AI Features</p>
+                  <p className="text-[10px] text-black/40 dark:text-white/30 font-mono">Toggle Generator, Semantic Search & Insights</p>
+                </div>
+                <button 
+                  onClick={() => updateSettings({ aiEnabled: !settings.aiEnabled })}
+                  className={`w-12 h-6 rounded-full transition-all relative ${settings.aiEnabled ? 'bg-accent' : 'bg-black/10 dark:bg-white/10'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full transition-all ${settings.aiEnabled ? 'left-7 bg-white dark:bg-black' : 'left-1 bg-black/40 dark:bg-white/40'}`} />
+                </button>
+              </div>
+
+              {settings.aiEnabled && (
+                <div className="flex items-center justify-between group animate-in slide-in-from-top-2 duration-300">
+                  <div>
+                    <p className="text-[12px] font-bold text-black dark:text-white">Persistent Semantic Cache</p>
+                    <p className="text-[10px] text-black/40 dark:text-white/30 font-mono">Store AI generated metadata in local registry</p>
+                  </div>
+                  <div className="text-[10px] font-black uppercase opacity-20">Auto_Active</div>
+                </div>
+              )}
+            </div>
+          </section>
+
           {/* Section: Interface */}
           <section className="space-y-6">
             <h3 className="text-[10px] font-black uppercase tracking-widest text-accent flex items-center gap-2">
-              <span className="opacity-40">01</span> Interface_Visuals
+              <span className="opacity-40">02</span> Interface_Visuals
             </h3>
             
             <div className="space-y-5">
@@ -103,7 +135,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
           {/* Section: Typography */}
           <section className="space-y-6">
             <h3 className="text-[10px] font-black uppercase tracking-widest text-accent flex items-center gap-2">
-              <span className="opacity-40">02</span> Typography_Config
+              <span className="opacity-40">03</span> Typography_Config
             </h3>
             
             <div className="space-y-5">
@@ -144,7 +176,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
           {/* Section: Behavior */}
           <section className="space-y-6">
             <h3 className="text-[10px] font-black uppercase tracking-widest text-accent flex items-center gap-2">
-              <span className="opacity-40">03</span> System_Behavior
+              <span className="opacity-40">04</span> System_Behavior
             </h3>
             
             <div className="space-y-5">
