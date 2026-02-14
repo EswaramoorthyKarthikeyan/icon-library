@@ -7,10 +7,13 @@ interface IconGridProps {
   index: string;
   items: IconData[];
   itemCount: string;
-  selectedId: string | null;
-  onSelect: (id: string) => void;
+  activeId: string | null;
+  selectedIds: Set<string>;
+  onPreview: (id: string) => void;
+  onToggle: (id: string) => void;
   weighting: string;
   viewportSize: ViewportSize;
+  aiMatchedIds?: string[] | null;
 }
 
 const IconGrid: React.FC<IconGridProps> = ({
@@ -18,10 +21,13 @@ const IconGrid: React.FC<IconGridProps> = ({
   index,
   items,
   itemCount,
-  selectedId,
-  onSelect,
+  activeId,
+  selectedIds,
+  onPreview,
+  onToggle,
   weighting,
-  viewportSize
+  viewportSize,
+  aiMatchedIds
 }) => {
   const getStrokeWidth = () => {
     switch(weighting) {
@@ -32,62 +38,91 @@ const IconGrid: React.FC<IconGridProps> = ({
   };
 
   return (
-    <section className="mb-20">
+    <section className="mb-20" role="region" aria-labelledby={`grid-header-${index}`}>
       <div className="flex items-center justify-between border-b-2 border-black/15 dark:border-white/10 pb-4 mb-8 transition-colors duration-300">
-        <h2 className="text-[13px] font-black text-black dark:text-white uppercase tracking-[0.3em] flex items-center gap-4 transition-colors">
-          <span className="text-black/40 dark:text-white/30 font-mono text-[11px] transition-colors">{index}</span>
+        <h2 id={`grid-header-${index}`} className="text-[13px] font-black text-black dark:text-white uppercase tracking-[0.3em] flex items-center gap-4 transition-colors">
+          <span className="text-black/40 dark:text-white/30 font-mono text-[11px] transition-colors" aria-hidden="true">{index}</span>
           {title}
         </h2>
         <div className="flex items-center gap-6">
-          <span className="text-[10px] font-mono px-2.5 py-1 bg-black/5 dark:bg-white/5 border border-black/20 dark:border-white/10 text-black/70 dark:text-white/50 uppercase tracking-tighter rounded-sm shadow-sm">
+          <span className="text-[10px] font-mono px-2.5 py-1 bg-black/5 dark:bg-white/5 border border-black/20 dark:border-white/10 text-black/70 dark:text-white/50 uppercase tracking-tighter rounded-sm shadow-sm" aria-label={`Native size ${viewportSize} pixels`}>
             Native_{viewportSize}px
           </span>
-          <span className="text-[10px] font-mono text-black/50 dark:text-white/30 uppercase tracking-widest transition-colors font-bold">SET_{index} // {itemCount}</span>
+          <span className="text-[10px] font-mono text-black/50 dark:text-white/30 uppercase tracking-widest transition-colors font-bold" aria-label={`${itemCount} total items in this set`}>SET_{index} // {itemCount}</span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 border-l border-t border-black/15 dark:border-white/10 transition-colors bg-white/30 dark:bg-transparent backdrop-blur-sm rounded-sm overflow-hidden shadow-sm">
-        {items.map((icon) => (
-          <div
-            key={icon.id}
-            onClick={() => onSelect(icon.id)}
-            className={`
-              relative aspect-square flex flex-col items-center justify-center border-r border-b border-black/15 dark:border-white/10 cursor-pointer group transition-all duration-200
-              ${selectedId === icon.id ? 'bg-accent/15 scale-[1.02] z-10 shadow-xl' : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'}
-            `}
-          >
-            {/* Selection Dot */}
-            {icon.isSelected && (
-              <div className="absolute top-3 right-3 w-2 h-2 bg-accent rounded-full transition-colors shadow-[0_0_8px_var(--system-accent)]"></div>
-            )}
+        {items.map((icon) => {
+          const isAiMatched = aiMatchedIds?.includes(icon.id);
+          return (
+            <div
+              key={icon.id}
+              className={`
+                relative aspect-square flex flex-col items-center justify-center border-r border-b border-black/15 dark:border-white/10 cursor-pointer group transition-all duration-200
+                ${activeId === icon.id ? 'z-10 bg-accent/[0.03] ring-1 ring-inset ring-accent/30 shadow-inner' : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'}
+                ${isAiMatched ? 'bg-accent/[0.05]' : ''}
+              `}
+              onClick={() => onPreview(icon.id)}
+              role="button"
+              tabIndex={0}
+              aria-label={`Preview ${icon.name} icon`}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onPreview(icon.id)}
+            >
+              {/* AI Match Glow */}
+              {isAiMatched && (
+                <div className="absolute inset-0 bg-accent/5 animate-pulse pointer-events-none"></div>
+              )}
 
-            {/* Icon Container with Fixed native sizing based on ViewportSize */}
-            <div className="flex items-center justify-center mb-5" style={{ width: '56px', height: '56px' }}>
-              <svg 
-                style={{ width: `${viewportSize}px`, height: `${viewportSize}px` }}
-                className={`transition-all group-hover:scale-125 ${selectedId === icon.id ? 'text-accent drop-shadow-[0_0_4px_rgba(0,0,0,0.2)]' : 'text-black/70 dark:text-white/60 group-hover:text-black dark:group-hover:text-white'}`} 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth={getStrokeWidth()}
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                viewBox="0 0 24 24"
+              {/* Multi-Selection Checkbox Marker - Separate Hit Area */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggle(icon.id);
+                }}
+                className={`absolute top-3 left-3 w-4 h-4 border rounded-sm transition-all flex items-center justify-center z-20 ${selectedIds.has(icon.id) ? 'bg-accent border-accent scale-110 shadow-sm' : 'border-black/20 dark:border-white/20 bg-white/50 dark:bg-black/50 opacity-40 group-hover:opacity-100 hover:border-accent'}`}
+                aria-label={`Select ${icon.name} for export`}
+                aria-pressed={selectedIds.has(icon.id)}
               >
-                <path d={icon.svgPath} />
-              </svg>
+                {selectedIds.has(icon.id) && (
+                  <svg className="w-2.5 h-2.5 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                  </svg>
+                )}
+              </button>
+
+              {/* Active Inspector Marker */}
+              {activeId === icon.id && (
+                <div className="absolute top-3 right-3 w-1.5 h-1.5 bg-accent rounded-full shadow-[0_0_8px_var(--system-accent)]" aria-hidden="true"></div>
+              )}
+
+              {/* Icon Container */}
+              <div className="flex items-center justify-center mb-5" style={{ width: '56px', height: '56px' }} aria-hidden="true">
+                <svg 
+                  style={{ width: `${viewportSize}px`, height: `${viewportSize}px` }}
+                  className={`transition-all group-hover:scale-110 ${activeId === icon.id ? 'text-accent drop-shadow-[0_0_2px_rgba(0,0,0,0.1)]' : 'text-black/70 dark:text-white/60 group-hover:text-black dark:group-hover:text-white'}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth={getStrokeWidth()}
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  viewBox="0 0 24 24"
+                >
+                  <path d={icon.svgPath} />
+                </svg>
+              </div>
+
+              {/* Label */}
+              <span className={`text-[9px] font-black uppercase tracking-[0.2em] transition-colors ${activeId === icon.id ? 'text-accent opacity-100' : 'text-black/50 dark:text-white/30 group-hover:text-black/80 dark:group-hover:text-white/60'}`} aria-hidden="true">
+                {icon.name}
+              </span>
+              
+              {isAiMatched && (
+                <span className="absolute bottom-1 right-2 text-[6px] font-black text-accent uppercase tracking-tighter opacity-60">AI_Matched</span>
+              )}
             </div>
-
-            {/* Label */}
-            <span className={`text-[9px] font-black uppercase tracking-[0.2em] transition-colors ${selectedId === icon.id ? 'text-accent opacity-100' : 'text-black/50 dark:text-white/30 group-hover:text-black/80 dark:group-hover:text-white/60'}`}>
-              {icon.name}
-            </span>
-
-            {/* Selection Active Border */}
-            {selectedId === icon.id && (
-              <div className="absolute inset-0 pointer-events-none ring-2 ring-inset ring-accent shadow-[inset_0_0_20px_rgba(var(--system-accent),0.1)]"></div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
