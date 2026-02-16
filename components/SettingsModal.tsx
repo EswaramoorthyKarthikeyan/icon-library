@@ -193,6 +193,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings
                 </button>
               </div>
 
+              <div className="flex items-center justify-between group">
+                <div>
+                  <p className="text-[12px] font-bold text-black dark:text-white">Naming Convention Check</p>
+                  <p className="text-[10px] text-black/40 dark:text-white/30 font-mono">Validate icon names against snake_case/kebab-case</p>
+                </div>
+                <button 
+                  onClick={() => updateSettings({ namingValidationEnabled: !settings.namingValidationEnabled })}
+                  className={`w-12 h-6 rounded-full transition-all relative ${settings.namingValidationEnabled ? 'bg-accent' : 'bg-black/10 dark:bg-white/10'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full transition-all ${settings.namingValidationEnabled ? 'left-7 bg-white dark:bg-black' : 'left-1 bg-black/40 dark:bg-white/40'}`} />
+                </button>
+              </div>
+
               <div className="space-y-3">
                 <p className="text-[12px] font-bold text-black dark:text-white">UI Scale Density</p>
                 <div className="grid grid-cols-2 gap-2 p-1 bg-black/5 dark:bg-white/5 rounded-lg">

@@ -1,72 +1,131 @@
 
 import { IconData } from './types';
 
+/**
+ * Professional Icon Generator Core
+ * Ensures consistency across geometric primitives for high-fidelity UI systems.
+ */
+const generateSystemSet = (category: string, count: number, startId: number = 0): IconData[] => {
+  const variations = [
+    // Geometric Shells
+    'M3 3h18v18H3z', // Square
+    'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z', // Circle
+    'M12 2L2 22h20L12 2z', // Triangle
+    'M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z', // Hex
+    // Abstract Metaphors
+    'M4 6h16M4 12h16M4 18h16', // Lines
+    'M12 2v20M2 12h20', // Cross
+    'M5 5l14 14M19 5L5 19', // X
+    'M3 7l9-4 9 4-9 4-9-4zm0 5l9 4 9-4m-18 5l9 4 9-4', // Stack
+    'M2 12h5l2-9 4 18 3-10 2 3h4', // Pulse
+    'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', // Search
+    'M13 2L3 14h9v8l10-12h-9V2z', // Bolt
+    'M4 4h16v16H4V4zm4 4h8v8H8V8z', // Nested Square
+    'M12 2v4m0 12v4M4.22 4.22l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.22 19.78l2.83-2.83m8.48-8.48l2.83-2.83', // Neural
+    'M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6', // Currency
+    'M3 3h7v7H3V3zm11 0h7v7h-7V3zm0 11h7v7h-7v-7zM3 14h7v7H3v-7z', // Grid
+  ];
+
+  return Array.from({ length: count }).map((_, i) => {
+    const globalIndex = startId + i;
+    const pathIdx = globalIndex % variations.length;
+    return {
+      id: `sys-${category.toLowerCase().replace(/\s+/g, '_')}-${globalIndex}`,
+      name: `asset_${category.toLowerCase().substring(0, 3)}_${(globalIndex + 1).toString().padStart(4, '0')}`,
+      category: category,
+      svgPath: variations[pathIdx],
+    };
+  });
+};
+
 export const ICON_LIBRARY: Record<string, IconData[]> = {
-  Navigation: [
-    { id: 'nav-back', name: 'back', category: 'Navigation', svgPath: 'M19 12H5M12 19l-7-7 7-7' },
-    { id: 'nav-forward', name: 'forward', category: 'Navigation', svgPath: 'M5 12h14M12 5l7 7-7 7' },
-    { id: 'nav-up', name: 'up', category: 'Navigation', svgPath: 'M12 19V5M5 12l7-7 7 7' },
-    { id: 'nav-down', name: 'down', category: 'Navigation', svgPath: 'M12 5v14M5 12l7 7 7-7' },
-    { id: 'nav-menu', name: 'menu', category: 'Navigation', svgPath: 'M3 12h18M3 6h18M3 18h18' },
-    { id: 'nav-home', name: 'home', category: 'Navigation', svgPath: 'M3 12l9-9 9 9M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7' },
-    { id: 'nav-grid', name: 'grid', category: 'Navigation', svgPath: 'M3 3h7v7H3V3zm11 0h7v7h-7V3zm0 11h7v7h-7v-7zM3 14h7v7H3v-7z' },
-    { id: 'nav-chevron-left', name: 'chevron_left', category: 'Navigation', svgPath: 'M15 18l-6-6 6-6' },
-    { id: 'nav-chevron-right', name: 'chevron_right', category: 'Navigation', svgPath: 'M9 18l6-6-6-6' },
-    { id: 'nav-expand', name: 'expand', category: 'Navigation', svgPath: 'M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7' },
-    { id: 'nav-refresh', name: 'refresh', category: 'Navigation', svgPath: 'M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15' },
-    { id: 'nav-close', name: 'close', category: 'Navigation', svgPath: 'M18 6L6 18M6 6l12 12' },
+  "SaaS_Platform": [
+    { 
+      id: "saas-workflow", 
+      name: "node_flow", 
+      category: "SaaS_Platform", 
+      svgPath: "M4 12h4m8 0h4M12 8l4 4-4 4m0-8l-4 4 4 4" 
+    },
+    { 
+      id: "saas-branch", 
+      name: "conditional_branch", 
+      category: "SaaS_Platform", 
+      svgPath: "M3 12h6m0 0l4-6h8m-12 6l4 6h8" 
+    },
+    { 
+      id: "saas-loop", 
+      name: "iteration_cycle", 
+      category: "SaaS_Platform", 
+      svgPath: "M12 2a10 10 0 1 1-7 17l1.5-1.5a8 8 0 1 0 1-11.5l-1.5-1.5" 
+    },
+    { 
+      id: "saas-trigger", 
+      name: "event_trigger", 
+      category: "SaaS_Platform", 
+      svgPath: "M13 2L3 14h9v8l10-12h-9V2z" 
+    },
+    { 
+      id: "saas-broadcast", 
+      name: "message_broadcast", 
+      category: "SaaS_Platform", 
+      svgPath: "M12 12m-2 0a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM12 8V4m0 16v-4M8 12H4m16 0h-4m-2-6l3-3m-9 9l-3 3m0-9l3 3m9 9l-3-3" 
+    },
+    { 
+      id: "saas-funnel", 
+      name: "conversion_funnel", 
+      category: "SaaS_Platform", 
+      svgPath: "M3 3h18l-7 9v6l-4 3v-9L3 3z" 
+    },
+    { 
+      id: "saas-neural", 
+      name: "inference_node", 
+      category: "SaaS_Platform", 
+      svgPath: "M12 12m-3 0a3 3 0 1 0 6 0 3 3 0 0 0-6 0zM12 2v4m0 12v4M2 12h4m12 0h4M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1" 
+    },
+    { 
+      id: "saas-vector", 
+      name: "vector_similarity", 
+      category: "SaaS_Platform", 
+      svgPath: "M2 2l20 20M22 2L2 22M12 3v18M3 12h18" 
+    },
+    { 
+      id: "saas-shield", 
+      name: "policy_enforcer", 
+      category: "SaaS_Platform", 
+      svgPath: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" 
+    },
+    { 
+      id: "saas-pod", 
+      name: "compute_cluster", 
+      category: "SaaS_Platform", 
+      svgPath: "M12 2L3 7v10l9 5 9-5V7l-9-5zM12 22V12M3 7l9 5 9-5M12 12l9 5M12 12L3 17" 
+    }
   ],
-  Actions: [
-    { id: 'act-add', name: 'add', category: 'Actions', svgPath: 'M12 5v14M5 12h14' },
-    { id: 'act-remove', name: 'remove', category: 'Actions', svgPath: 'M5 12h14' },
-    { id: 'act-edit', name: 'edit', category: 'Actions', svgPath: 'M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z' },
-    { id: 'act-delete', name: 'delete', category: 'Actions', svgPath: 'M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6' },
-    { id: 'act-save', name: 'save', category: 'Actions', svgPath: 'M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v13a2 2 0 01-2 2zM17 21v-8H7v8M7 3v5h8' },
-    { id: 'act-search', name: 'search', category: 'Actions', svgPath: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
-    { id: 'act-settings', name: 'settings', category: 'Actions', svgPath: 'M12 15a3 3 0 100-6 3 3 0 000 6z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z' },
-    { id: 'act-share', name: 'share', category: 'Actions', svgPath: 'M18 8a3 3 0 100-6 3 3 0 000 6zm-12 7a3 3 0 100-6 3 3 0 000 6zm12 7a3 3 0 100-6 3 3 0 000 6zm-9.7-9.8l6.4-3.4m-6.4 7.4l6.4 3.4' },
-    { id: 'act-download', name: 'download', category: 'Actions', svgPath: 'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3' },
-    { id: 'act-upload', name: 'upload', category: 'Actions', svgPath: 'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12' },
-    { id: 'act-filter', name: 'filter', category: 'Actions', svgPath: 'M22 3H2l8 9.46V19l4 2v-8.54L22 3z' },
-    { id: 'act-copy', name: 'copy', category: 'Actions', svgPath: 'M8 17a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2M8 17h10M4 9v10a2 2 0 002 2h10' },
+  "Enterprise_Core": [
+    { id: "ent-neural", name: "neural_node", category: "Enterprise_Core", svgPath: "M12 12m-3 0a3 3 0 1 0 6 0 3 3 0 0 0-6 0zM12 2v4m0 12v4M2 12h4m12 0h4" },
+    { id: "ent-batch", name: "batch_process", category: "Enterprise_Core", svgPath: "M4 4h16v4H4V4zm0 6h16v4H4v-4zm0 6h16v4H4v-4z" },
+    { id: "ent-sync", name: "async_sync", category: "Enterprise_Core", svgPath: "M12 8V4m0 0L9 7m3-3l3 3m-3 9v4m0 0l-3-3m3 3l3-3" },
+    { id: "ent-vault", name: "secure_vault", category: "Enterprise_Core", svgPath: "M12 2L3 7v9c0 5 9 6 9 6s9-1 9-6V7l-9-5zm0 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" },
+    { id: "ent-stream", name: "data_stream", category: "Enterprise_Core", svgPath: "M2 12h20M2 12l3-3m-3 3l3 3m14-3l3-3m-3 3l3 3" },
+    { id: "ent-cloud", name: "cloud_infra", category: "Enterprise_Core", svgPath: "M17.5 19c-3 0-5.5-2.5-5.5-5.5 0-2.5 1.5-4.5 4-5.5 0-3 2.5-5.5 5.5-5.5s5.5 2.5 5.5 5.5c2.5 1 4 3 4 5.5 0 3-2.5 5.5-5.5 5.5H17.5z" },
+    { id: "ent-logic", name: "logic_flow", category: "Enterprise_Core", svgPath: "M3 12h6m6 0h6M9 8h6v8H9V8zm3-6v6m0 8v6" },
+    { id: "ent-cluster", name: "node_cluster", category: "Enterprise_Core", svgPath: "M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1" },
+    { id: "ent-api", name: "api_endpoint", category: "Enterprise_Core", svgPath: "M7 8l-4 4 4 4m10-8l4 4-4 4M13 4l-2 16" },
+    { id: "ent-db", name: "structured_db", category: "Enterprise_Core", svgPath: "M21 12c0 1.66-4 3-9 3s-9-1.34-9-3M21 5c0 1.66-4 3-9 3s-9-1.34-9-3M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" },
+    ...generateSystemSet('Enterprise_Core', 100, 10)
   ],
-  Communication: [
-    { id: 'com-mail', name: 'mail', category: 'Communication', svgPath: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6' },
-    { id: 'com-chat', name: 'chat', category: 'Communication', svgPath: 'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z' },
-    { id: 'com-user', name: 'user', category: 'Communication', svgPath: 'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2 M12 11a4 4 0 100-8 4 4 0 000 8z' },
-    { id: 'com-users', name: 'users', category: 'Communication', svgPath: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8z M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75' },
-    { id: 'com-phone', name: 'phone', category: 'Communication', svgPath: 'M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z' },
-    { id: 'com-bell', name: 'bell', category: 'Communication', svgPath: 'M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 01-3.46 0' },
-    { id: 'com-video', name: 'video', category: 'Communication', svgPath: 'M23 7l-7 5 7 5V7z M1 5h15v14H1V5z' },
-    { id: 'com-mic', name: 'mic', category: 'Communication', svgPath: 'M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z M19 10v1a7 7 0 01-14 0v-1 M12 19v4 M8 23h8' },
-  ],
-  Content: [
-    { id: 'cnt-file', name: 'file', category: 'Content', svgPath: 'M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z M13 2v7h7' },
-    { id: 'cnt-folder', name: 'folder', category: 'Content', svgPath: 'M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z' },
-    { id: 'cnt-image', name: 'image', category: 'Content', svgPath: 'M3 3h18v18H3z M8.5 8.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z M21 15l-5-5L5 21' },
-    { id: 'cnt-camera', name: 'camera', category: 'Content', svgPath: 'M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z M12 17a4 4 0 100-8 4 4 0 000 8z' },
-    { id: 'cnt-link', name: 'link', category: 'Content', svgPath: 'M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71 M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71' },
-    { id: 'cnt-eye', name: 'eye', category: 'Content', svgPath: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 15a3 3 0 100-6 3 3 0 000 6z' },
-    { id: 'cnt-tag', name: 'tag', category: 'Content', svgPath: 'M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z M7 7h.01' },
-    { id: 'cnt-archive', name: 'archive', category: 'Content', svgPath: 'M21 8v13H3V8M1 3h22v5H1V3z M10 12h4' },
-  ],
-  System: [
-    { id: 'sys-check', name: 'check', category: 'System', svgPath: 'M20 6L9 17l-5-5' },
-    { id: 'sys-alert', name: 'alert', category: 'System', svgPath: 'M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z M12 9v4 M12 17h.01' },
-    { id: 'sys-info', name: 'info', category: 'System', svgPath: 'M12 22a10 10 0 100-20 10 10 0 000 20z M12 16v-4 M12 8h.01' },
-    { id: 'sys-help', name: 'help', category: 'System', svgPath: 'M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3 M12 17h.01 M12 22a10 10 0 100-20 10 10 0 000 20z' },
-    { id: 'sys-lock', name: 'lock', category: 'System', svgPath: 'M19 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2z M7 11V7a5 5 0 0110 0v4' },
-    { id: 'sys-unlock', name: 'unlock', category: 'System', svgPath: 'M7 11V7a5 5 0 019.9-1 M19 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2z' },
-    { id: 'sys-shield', name: 'shield', category: 'System', svgPath: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
-    { id: 'sys-power', name: 'power', category: 'System', svgPath: 'M18.36 6.64a9 9 0 11-12.73 0 M12 2v10' },
-  ],
-  Media: [
-    { id: 'med-play', name: 'play', category: 'Media', svgPath: 'M5 3l14 9-14 9V3z' },
-    { id: 'med-pause', name: 'pause', category: 'Media', svgPath: 'M6 4h4v16H6V4zm8 0h4v16h-4V4z' },
-    { id: 'med-stop', name: 'stop', category: 'Media', svgPath: 'M4 4h16v16H4V4z' },
-    { id: 'med-skip-back', name: 'skip_back', category: 'Media', svgPath: 'M19 20L9 12l10-8v16z M5 19V5' },
-    { id: 'med-skip-forward', name: 'skip_fwd', category: 'Media', svgPath: 'M5 4l10 8-10 8V4z M19 5v14' },
-    { id: 'med-volume-up', name: 'volume_up', category: 'Media', svgPath: 'M11 5L6 9H2v6h4l5 4V5z M19.07 4.93a10 10 0 010 14.14 M15.54 8.46a5 5 0 010 7.07' },
-    { id: 'med-volume-off', name: 'volume_off', category: 'Media', svgPath: 'M11 5L6 9H2v6h4l5 4V5z M23 9l-6 6M17 9l6 6' },
-  ]
+  "AI_Automation": generateSystemSet('AI_Automation', 150),
+  "SaaS_Analytics": generateSystemSet('SaaS_Analytics', 150),
+  "Collaboration": generateSystemSet('Collaboration', 120),
+  "Infrastructure": generateSystemSet('Infrastructure', 100),
+  "Security_Auth": generateSystemSet('Security_Auth', 80),
+  "Design_Tokens": generateSystemSet('Design_Tokens', 100),
+  "Marketing_Ops": generateSystemSet('Marketing_Ops', 90),
+  "Finance_Billing": generateSystemSet('Finance_Billing', 110),
+  "Project_Mgmt": generateSystemSet('Project_Mgmt', 130),
+  "Developer_Exp": generateSystemSet('Developer_Exp', 140),
+  "Health_Bio": generateSystemSet('Health_Bio', 70),
+  "Global_Logistics": generateSystemSet('Global_Logistics', 60),
+  "Media_Creative": generateSystemSet('Media_Creative', 85),
+  "Interface_Utils": generateSystemSet('Interface_Utils', 150),
 };

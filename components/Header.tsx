@@ -26,35 +26,60 @@ const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="h-16 border-b border-black/10 dark:border-white/10 flex items-center justify-between px-8 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md z-50 shrink-0 sticky top-0">
+    <header className="h-16 border-b border-black/10 dark:border-white/10 flex items-center justify-between px-8 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md z-50 shrink-0 sticky top-0" role="banner">
       <div className="flex items-center gap-12 h-full">
-        <div className="flex flex-col">
+        <div className="flex flex-col" aria-live="polite">
           <span className="text-[9px] font-black opacity-30 uppercase tracking-widest">Registry</span>
           <span className="text-[12px] font-black uppercase font-mono">Core_Registry.05 [{matchCount}/{totalCount}]</span>
         </div>
-        <nav className="flex gap-8 h-full">
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)} className={`h-full border-b-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === t.id ? 'border-accent text-accent' : 'border-transparent opacity-40 hover:opacity-100'}`}>
-              {t.label}
-            </button>
-          ))}
+        <nav className="h-full" aria-label="Main application tabs">
+          <div className="flex gap-8 h-full" role="tablist">
+            {tabs.map(t => (
+              <button 
+                key={t.id} 
+                id={`tab-${t.id}`}
+                role="tab"
+                aria-selected={activeTab === t.id}
+                aria-controls={`panel-${t.id}`}
+                onClick={() => setActiveTab(t.id)} 
+                className={`h-full border-b-2 text-[10px] font-black uppercase tracking-widest transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset ${activeTab === t.id ? 'border-accent text-accent' : 'border-transparent opacity-40 hover:opacity-100'}`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </nav>
       </div>
 
       <div className="flex items-center gap-4">
         {selectedCount > 0 && (
-          <div className="flex items-center gap-2 pr-4 border-r border-black/10 dark:border-white/10">
-            <button onClick={onClearSelection} className="px-3 py-1 text-[9px] font-black uppercase opacity-40 hover:opacity-100 transition-all">Clear</button>
-            <button onClick={onSelectAllFiltered} className="px-3 py-1 text-[9px] font-black uppercase opacity-40 hover:opacity-100 transition-all">Select_Match</button>
-            <button onClick={onCreateCollection} className="px-3 py-1 bg-accent/10 border border-accent/20 rounded text-[9px] font-black uppercase text-accent hover:bg-accent/20 transition-all">Save_Set</button>
+          <div className="flex items-center gap-2 pr-4 border-r border-black/10 dark:border-white/10" role="group" aria-label="Bulk selection actions">
+            <button 
+              onClick={onClearSelection} 
+              className="px-3 py-1 text-[9px] font-black uppercase opacity-40 hover:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-accent rounded"
+            >
+              Clear
+            </button>
+            <button 
+              onClick={onSelectAllFiltered} 
+              className="px-3 py-1 text-[9px] font-black uppercase opacity-40 hover:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-accent rounded"
+            >
+              Select_Match
+            </button>
+            <button 
+              onClick={onCreateCollection} 
+              className="px-3 py-1 bg-accent/10 border border-accent/20 rounded text-[9px] font-black uppercase text-accent hover:bg-accent/20 transition-all focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              Save_Set
+            </button>
           </div>
         )}
         <button 
           onClick={onOpenSettings} 
-          className="p-2.5 bg-black/5 dark:bg-white/5 rounded-full opacity-60 hover:opacity-100 transition-all border border-transparent hover:border-accent" 
-          aria-label="Open settings"
+          className="p-2.5 bg-black/5 dark:bg-white/5 rounded-full opacity-60 hover:opacity-100 transition-all border border-transparent hover:border-accent focus-visible:ring-2 focus-visible:ring-accent" 
+          aria-label="Open application settings"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
           </svg>
         </button>

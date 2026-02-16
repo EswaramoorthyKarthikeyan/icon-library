@@ -39,6 +39,7 @@ export interface AppSettings {
   monoFont: string;
   semanticSearchEnabled: boolean;
   aiEnabled: boolean;
+  namingValidationEnabled: boolean;
 }
 
 export interface AppState {
