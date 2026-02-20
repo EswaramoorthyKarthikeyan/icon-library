@@ -1,7 +1,12 @@
 
 import React from 'react';
-import { ViewportSize, Weighting, Collection, IconTransform } from '../types.ts';
+import { SearchIcon, Repeat, Eye, PanelsTopLeft, Package, Sparkles, Trash, Clock } from 'lucide-react';
+import { ViewportSize, Weighting, Collection, IconTransform, IconData } from '../types.ts';
 import { ICON_LIBRARY } from '../constants.tsx';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SidebarProps {
   viewportSize: ViewportSize;
@@ -19,227 +24,306 @@ interface SidebarProps {
   accentColor: string;
   setAccentColor: (color: string) => void;
   selectedCount: number;
-  onExport: () => void;
+  onExport: (format: 'svg' | 'jsx' | 'json') => void;
   aiEnabled: boolean;
   semanticSearchEnabled: boolean;
   setSemanticSearchEnabled: (val: boolean) => void;
   isAiSearching: boolean;
   transform: IconTransform;
   setTransform: (t: IconTransform) => void;
+  recentlyViewedIds: string[];
+  allIcons: IconData[];
+  onPreview: (id: string) => void;
 }
-
-const ACCENT_PRESETS = [
-  { name: 'Classic', color: '' },
-  { name: 'Indigo', color: '#6366f1' },
-  { name: 'Cyber', color: '#10b981' },
-  { name: 'Solar', color: '#f59e0b' },
-  { name: 'Crimson', color: '#ef4444' },
-  { name: 'Violet', color: '#8b5cf6' },
-];
 
 const Sidebar: React.FC<SidebarProps> = ({
   viewportSize, setViewportSize, weighting, setWeighting, searchQuery, setSearchQuery,
   selectedCategory, setSelectedCategory, collections, activeCollectionId, setActiveCollectionId,
   onDeleteCollection, accentColor, setAccentColor, selectedCount, onExport,
-  aiEnabled, semanticSearchEnabled, setSemanticSearchEnabled, isAiSearching, transform, setTransform
+  aiEnabled, semanticSearchEnabled, setSemanticSearchEnabled, isAiSearching, transform, setTransform,
+  recentlyViewedIds, allIcons, onPreview, searchHistory, onSelectHistory
 }) => {
-  return (
-    <aside 
-      className="w-72 flex-shrink-0 bg-white dark:bg-[#0a0a0a] border-r border-black/15 dark:border-white/10 h-screen flex flex-col p-6 overflow-y-auto transition-colors z-[60] custom-scrollbar"
-      aria-label="Application Sidebar"
-    >
-      {/* Branding */}
-      <div className="mb-8" aria-hidden="true">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-3 h-3 bg-accent shadow-[0_0_8px_var(--system-accent)] transition-all duration-300"></div>
-          <h1 className="text-black dark:text-white font-black text-[11px] tracking-[0.2em] uppercase">Core UI System</h1>
-        </div>
-        <span className="text-[9px] font-mono opacity-30 tracking-wider">DS_EXPLORER_V5.0.0</span>
-      </div>
+  const [exportFormat, setExportFormat] = React.useState<'svg' | 'jsx' | 'json'>('svg');
 
-      {/* Global Search & AI Toggle */}
-      <section className="mb-6" aria-labelledby="search-section-label">
-        <div className="flex justify-between items-center mb-2">
-          <label id="search-section-label" htmlFor="global-search-input" className="text-[10px] font-black opacity-40 uppercase tracking-widest">Global Search</label>
-          {aiEnabled && (
-            <button 
-              onClick={() => setSemanticSearchEnabled(!semanticSearchEnabled)} 
-              aria-pressed={semanticSearchEnabled}
-              aria-busy={isAiSearching}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded-full border transition-all focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none ${semanticSearchEnabled ? 'bg-accent/10 border-accent text-accent' : 'bg-black/5 dark:bg-white/5 border-transparent opacity-40'}`}
-              aria-label="Toggle AI semantic search"
+  return (
+    <div className="flex h-full flex-col overflow-hidden bg-muted/20">
+      <ScrollArea className="flex-1 p-4">
+        {/* Branding */}
+        <div className="mb-6">
+          <div className="mb-1 flex items-center gap-2">
+            <div className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-primary" />
+            <h2 className="text-[11px] font-extrabold uppercase tracking-[0.15em] text-foreground">Core UI System</h2>
+          </div>
+          <p className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground/50">DS_EXPLORER_V5.0.0</p>
+        </div>
+
+        {/* Global Search */}
+        <div className="mb-6 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-[0.1em] opacity-50">Search_Registry</span>
+            {aiEnabled && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-5 px-2 text-[8px] font-bold uppercase transition-all ${semanticSearchEnabled ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}
+                onClick={() => setSemanticSearchEnabled(!semanticSearchEnabled)}
+              >
+                {isAiSearching ? 'Analysing...' : 'AI Semantic'}
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="relative">
+          <SearchIcon className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground/70" />
+          <Input
+            placeholder={aiEnabled && semanticSearchEnabled ? "Concept search..." : "Search ID..."}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-9 border-muted-foreground/20 pl-8 font-mono text-[11px] placeholder:text-muted-foreground/40 focus-visible:ring-primary/20"
+          />
+        </div>
+
+        {searchHistory?.length > 0 && !searchQuery && (
+          <div className="flex flex-wrap gap-1.5 px-0.5">
+            {searchHistory?.slice(0, 5).map(hist => (
+              <button
+                key={hist}
+                onClick={() => onSelectHistory(hist)}
+                className="rounded-[3px] bg-background/50 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-muted-foreground border border-transparent hover:border-primary/20 hover:text-foreground transition-all"
+              >
+                {hist}
+              </button>
+            ))}
+          </div>
+        )}
+
+
+        {/* Appearance Config */}
+        <div className="mb-6 space-y-4">
+          <div>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] opacity-40">System_Scale</p>
+            <div className="flex w-full rounded-md border border-muted-foreground/10 bg-background/50 p-1">
+              {[16, 24, 32].map((size) => (
+                <button
+                  key={size}
+                  onClick={() => setViewportSize(size as ViewportSize)}
+                  className={`flex-1 rounded-[4px] py-1.5 text-[10px] font-bold transition-all ${viewportSize === size
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:bg-muted'
+                    }`}
+                >
+                  {size}PX
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] opacity-40">Stroke_Weight</p>
+            <div className="flex w-full rounded-md border border-muted-foreground/10 bg-background/50 p-1">
+              {(['regular', 'medium', 'bold'] as Weighting[]).map((w) => (
+                <button
+                  key={w}
+                  onClick={() => setWeighting(w)}
+                  className={`flex-1 rounded-[4px] py-1.5 text-[10px] font-bold uppercase transition-all ${weighting === w
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:bg-muted'
+                    }`}
+                >
+                  {w}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] opacity-40">Accent_Color</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { name: 'Default', value: '' },
+                { name: 'Indigo', value: '#6366f1' },
+                { name: 'Purple', value: '#a855f7' },
+                { name: 'Rose', value: '#f43f5e' },
+                { name: 'Amber', value: '#fbbf24' },
+                { name: 'Emerald', value: '#10b981' },
+              ].map((color) => (
+                <button
+                  key={color.name}
+                  onClick={() => setAccentColor(color.value)}
+                  className={`group relative flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all hover:scale-110 ${accentColor === color.value ? 'border-primary ring-2 ring-primary/20' : 'border-transparent'}`}
+                  title={color.name}
+                >
+                  <div
+                    className="h-4 w-4 rounded-full shadow-inner"
+                    style={{ backgroundColor: color.value || (document.documentElement.classList.contains('dark') ? '#60a5fa' : '#2563eb') }}
+                  />
+                  {accentColor === color.value && <div className="absolute inset-0 flex items-center justify-center"><div className="h-1 w-1 rounded-full bg-white shadow-sm" /></div>}
+                </button>
+              ))}
+              <div className="relative h-6 w-6 overflow-hidden rounded-full border-2 border-muted-foreground/10 hover:border-primary/50 transition-colors">
+                <input
+                  type="color"
+                  value={accentColor || '#3b82f6'}
+                  onChange={(e) => setAccentColor(e.target.value)}
+                  className="absolute inset-0 h-[150%] w-[150%] -translate-x-[25%] -translate-y-[25%] cursor-pointer border-none p-0"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Batch Transform */}
+        <div className="mb-6 rounded-lg border border-primary/10 bg-primary/5 p-4 transition-all hover:border-primary/20">
+          <div className="mb-4 flex items-center gap-2">
+            <Repeat className="h-3.5 w-3.5 shrink-0 text-primary" />
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Dynamic_Transform</p>
+          </div>
+
+          <div className="mb-4 space-y-3">
+            <div className="flex justify-between font-mono text-[9px] font-bold uppercase tracking-tight text-primary/60">
+              <label>Rotation</label>
+              <span>{transform.rotate}°</span>
+            </div>
+            <Slider
+              min={0}
+              max={270}
+              step={90}
+              value={[transform.rotate]}
+              onValueChange={(vals) => setTransform({ ...transform, rotate: vals[0] })}
+            />
+          </div>
+
+          <div className="mb-5 space-y-3">
+            <div className="flex justify-between font-mono text-[9px] font-bold uppercase tracking-tight text-primary/60">
+              <label>Scaling</label>
+              <span>{Math.round(transform.scale * 100)}%</span>
+            </div>
+            <Slider
+              min={0.5}
+              max={1.5}
+              step={0.1}
+              value={[transform.scale]}
+              onValueChange={(vals) => setTransform({ ...transform, scale: vals[0] })}
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant={transform.flipH ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setTransform({ ...transform, flipH: !transform.flipH })}
+              className={`h-7 flex-1 text-[10px] ${transform.flipH ? 'border-primary' : ''}`}
             >
-              <span className="text-[8px] font-black uppercase">AI_Search</span>
-              {isAiSearching && <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" aria-hidden="true"></div>}
-            </button>
+              Flip H
+            </Button>
+            <Button
+              variant={transform.flipV ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setTransform({ ...transform, flipV: !transform.flipV })}
+              className={`h-7 flex-1 text-[10px] ${transform.flipV ? 'border-primary' : ''}`}
+            >
+              Flip V
+            </Button>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <div className="mb-6 space-y-1">
+          <button
+            onClick={() => { setSelectedCategory(null); setActiveCollectionId(null); }}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${!selectedCategory && !activeCollectionId ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
+              }`}
+          >
+            <Package className="h-4 w-4" />
+            All Registry
+          </button>
+
+          <div className="pt-2">
+            <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-[0.1em] opacity-50">Categories</p>
+            {Object.keys(ICON_LIBRARY).map(cat => (
+              <button
+                key={cat}
+                onClick={() => { setSelectedCategory(cat); setActiveCollectionId(null); }}
+                className={`block w-full rounded-md px-3 py-1.5 text-left text-xs uppercase tracking-wide transition-colors ${selectedCategory === cat ? 'bg-accent text-accent-foreground font-semibold border-l-2 border-primary pl-2.5' : 'text-muted-foreground hover:bg-accent/50'
+                  }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {collections.length > 0 && (
+            <div className="pt-4">
+              <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-[0.1em] opacity-50">Collections_Saved</p>
+              {collections.map(col => (
+                <div key={col.id} className="group flex items-center gap-1 px-1">
+                  <button
+                    onClick={() => { setActiveCollectionId(col.id); setSelectedCategory(null); }}
+                    className={`flex-1 rounded-md px-2 py-1.5 text-left text-xs uppercase tracking-wide transition-colors ${activeCollectionId === col.id ? 'bg-primary/10 text-primary font-bold border-l-2 border-primary pl-1.5' : 'text-muted-foreground hover:bg-accent/50'
+                      }`}
+                  >
+                    {col.name}
+                    <span className="ml-2 opacity-30 font-mono text-[9px]">[{col.iconIds.length}]</span>
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDeleteCollection(col.id); }}
+                    className="opacity-0 group-hover:opacity-40 hover:!opacity-100 p-1 transition-opacity text-destructive"
+                  >
+                    <Trash className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {recentlyViewedIds.length > 0 && (
+            <div className="pt-4 border-t mt-4">
+              <div className="flex items-center gap-2 px-2 mb-2">
+                <Clock className="h-3 w-3 text-primary/50" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.1em] opacity-50">Recent_Assets</p>
+              </div>
+              <div className="space-y-0.5">
+                {recentlyViewedIds.map(id => {
+                  const icon = allIcons.find(i => i.id === id);
+                  if (!icon) return null;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => onPreview(id)}
+                      className="block w-full rounded-md px-3 py-1.5 text-left text-[10px] uppercase truncate tracking-wide text-muted-foreground hover:bg-accent/50 transition-colors"
+                    >
+                      {icon.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
-        <input 
-          id="global-search-input"
-          type="text" 
-          value={searchQuery} 
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={aiEnabled && semanticSearchEnabled ? "Concept search..." : "Search ID..."}
-          className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded px-3 py-2 text-[12px] font-mono focus:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors"
-        />
-      </section>
-
-      {/* System Theme / Accent Options */}
-      <section className="mb-8 space-y-3" aria-labelledby="accent-section-label">
-        <label id="accent-section-label" className="text-[10px] font-black opacity-40 uppercase tracking-widest">System_Accent</label>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="System accent color selection">
-          {ACCENT_PRESETS.map((preset) => (
-            <button
-              key={preset.name}
-              onClick={() => setAccentColor(preset.color)}
-              aria-pressed={accentColor === preset.color}
-              className={`w-6 h-6 rounded-full border-2 transition-all focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${accentColor === preset.color ? 'border-accent scale-110 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'}`}
-              style={{ backgroundColor: preset.color || (document.documentElement.classList.contains('dark') ? '#ffffff' : '#000000') }}
-              title={preset.name}
-              aria-label={`Set accent color to ${preset.name}`}
-            />
-          ))}
-          <div className="relative">
-            <input 
-              id="custom-color-picker"
-              type="color" 
-              value={accentColor || '#000000'} 
-              onChange={(e) => setAccentColor(e.target.value)}
-              className="w-6 h-6 rounded-full overflow-hidden border-0 cursor-pointer p-0 bg-transparent focus-visible:ring-2 focus-visible:ring-accent"
-              aria-label="Choose custom accent color"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Primary Config: Scale & Weight */}
-      <section className="mb-8 space-y-6" aria-label="Appearance configurations">
-        <div className="space-y-3">
-          <label id="scale-label" className="text-[10px] font-black opacity-40 uppercase tracking-widest">System_Scale</label>
-          <div className="grid grid-cols-3 gap-1 p-1 bg-black/5 dark:bg-white/5 rounded-lg border border-black/5 dark:border-white/5" role="group" aria-labelledby="scale-label">
-            {([16, 24, 32] as ViewportSize[]).map((size) => (
+        {/* Export Footer */}
+        <div className="border-t p-4 space-y-3" >
+          <div className="grid grid-cols-3 gap-1">
+            {(['svg', 'jsx', 'json'] as const).map((format) => (
               <button
-                key={size}
-                onClick={() => setViewportSize(size)}
-                aria-pressed={viewportSize === size}
-                className={`py-1.5 text-[10px] font-black rounded transition-all focus-visible:ring-2 focus-visible:ring-accent ${viewportSize === size ? 'bg-white dark:bg-black text-accent shadow-sm' : 'opacity-40 hover:opacity-100'}`}
+                key={format}
+                onClick={() => setExportFormat(format)}
+                className={`rounded border py-1 text-[9px] font-bold uppercase transition-all ${exportFormat === format ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted'}`}
               >
-                {size}px
+                {format}
               </button>
             ))}
           </div>
-        </div>
-
-        <div className="space-y-3">
-          <label id="weight-label" className="text-[10px] font-black opacity-40 uppercase tracking-widest">Stroke_Weight</label>
-          <div className="grid grid-cols-3 gap-1 p-1 bg-black/5 dark:bg-white/5 rounded-lg border border-black/5 dark:border-white/5" role="group" aria-labelledby="weight-label">
-            {(['regular', 'medium', 'bold'] as Weighting[]).map((w) => (
-              <button
-                key={w}
-                onClick={() => setWeighting(w)}
-                aria-pressed={weighting === w}
-                className={`py-1.5 text-[9px] font-black uppercase rounded transition-all focus-visible:ring-2 focus-visible:ring-accent ${weighting === w ? 'bg-white dark:bg-black text-accent shadow-sm' : 'opacity-40 hover:opacity-100'}`}
-              >
-                {w.slice(0, 3)}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Batch Transformation Engine */}
-      <section className="mb-8 p-4 bg-accent/[0.03] border border-accent/10 rounded-xl space-y-4 transition-colors" aria-labelledby="transform-label">
-        <h2 id="transform-label" className="text-[10px] font-black text-accent uppercase tracking-widest">Batch_Transform</h2>
-        
-        <div className="space-y-2">
-           <div className="flex justify-between text-[9px] font-black opacity-40 uppercase">
-             <label htmlFor="rotate-slider">Rotate</label>
-             <span aria-hidden="true">{transform.rotate}°</span>
-           </div>
-           <input 
-             id="rotate-slider"
-             type="range" 
-             min="0" 
-             max="270" 
-             step="90" 
-             value={transform.rotate} 
-             onChange={(e) => setTransform({...transform, rotate: parseInt(e.target.value)})} 
-             className="w-full accent-accent cursor-pointer focus-visible:ring-2 focus-visible:ring-accent rounded-lg" 
-             aria-valuetext={`${transform.rotate} degrees`}
-           />
-        </div>
-
-        <div className="space-y-2">
-           <div className="flex justify-between text-[9px] font-black opacity-40 uppercase">
-             <label htmlFor="scale-slider">Scale</label>
-             <span aria-hidden="true">{Math.round(transform.scale * 100)}%</span>
-           </div>
-           <input 
-             id="scale-slider"
-             type="range" 
-             min="0.5" 
-             max="1.5" 
-             step="0.1" 
-             value={transform.scale} 
-             onChange={(e) => setTransform({...transform, scale: parseFloat(e.target.value)})} 
-             className="w-full accent-accent cursor-pointer focus-visible:ring-2 focus-visible:ring-accent rounded-lg" 
-             aria-valuetext={`${Math.round(transform.scale * 100)} percent`}
-           />
-        </div>
-
-        <div className="flex gap-2" role="group" aria-label="Mirroring controls">
-          <button 
-            onClick={() => setTransform({...transform, flipH: !transform.flipH})} 
-            aria-pressed={transform.flipH}
-            className={`flex-1 py-1.5 border rounded text-[8px] font-black uppercase transition-all focus-visible:ring-2 focus-visible:ring-accent ${transform.flipH ? 'bg-accent text-white dark:text-black border-accent' : 'border-black/10 dark:border-white/10 opacity-60'}`}
+          <Button
+            className="flex h-auto w-full flex-col items-center gap-1 py-3"
+            disabled={selectedCount === 0}
+            onClick={() => onExport(exportFormat)}
           >
-            Flip_H
-          </button>
-          <button 
-            onClick={() => setTransform({...transform, flipV: !transform.flipV})} 
-            aria-pressed={transform.flipV}
-            className={`flex-1 py-1.5 border rounded text-[8px] font-black uppercase transition-all focus-visible:ring-2 focus-visible:ring-accent ${transform.flipV ? 'bg-accent text-white dark:text-black border-accent' : 'border-black/10 dark:border-white/10 opacity-60'}`}
-          >
-            Flip_V
-          </button>
-        </div>
-      </section>
-
-      {/* Library Navigation */}
-      <nav className="space-y-1 mb-8" aria-labelledby="manifest-label">
-        <h2 id="manifest-label" className="text-[10px] font-black opacity-40 uppercase tracking-widest mb-3">Library_Manifest</h2>
-        <button 
-          onClick={() => { setSelectedCategory(null); setActiveCollectionId(null); }} 
-          className={`w-full text-left px-3 py-2 rounded text-[12px] font-bold transition-all focus-visible:ring-2 focus-visible:ring-accent ${!selectedCategory && !activeCollectionId ? 'bg-black/10 dark:bg-white/10 text-accent' : 'opacity-60 hover:opacity-100'}`}
-          aria-current={!selectedCategory && !activeCollectionId ? 'page' : undefined}
-        >
-          All_Registry
-        </button>
-        {Object.keys(ICON_LIBRARY).map(cat => (
-          <button 
-            key={cat} 
-            onClick={() => setSelectedCategory(cat)} 
-            className={`w-full text-left px-3 py-2 rounded text-[11px] uppercase tracking-wider transition-all focus-visible:ring-2 focus-visible:ring-accent ${selectedCategory === cat ? 'bg-accent/5 text-accent font-black' : 'opacity-40 hover:opacity-100'}`}
-            aria-current={selectedCategory === cat ? 'location' : undefined}
-          >
-            {cat}
-          </button>
-        ))}
-      </nav>
-
-      {/* Bulk Action Footer */}
-      <div className="mt-auto pt-6 border-t border-black/10 dark:border-white/10">
-        <button 
-          onClick={onExport} 
-          disabled={selectedCount === 0}
-          className={`w-full py-4 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl transition-all active:scale-95 flex flex-col items-center gap-1 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none ${selectedCount > 0 ? 'bg-accent text-white dark:text-black' : 'bg-black/10 opacity-30 cursor-not-allowed'}`}
-          aria-label={`Export ${selectedCount} selected assets as ZIP`}
-        >
-          <span>Export_Assets</span>
-          <span className="text-[8px] opacity-70" aria-hidden="true">[{selectedCount}_Selected]</span>
-        </button>
-      </div>
-    </aside>
+            <span className="text-xs font-bold uppercase tracking-[0.1em]">Export Suite</span>
+            <span className="text-[10px] opacity-70">[{selectedCount} Selected]</span>
+          </Button>
+        </div >
+      </ScrollArea >
+    </div>
   );
 };
 

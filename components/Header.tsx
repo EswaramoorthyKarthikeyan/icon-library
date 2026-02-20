@@ -1,6 +1,8 @@
 
 import React from 'react';
-import { TabType } from '../types';
+import { TabType, ViewMode } from '../types';
+import { Settings, Trash, Check, Plus, LayoutGrid, List } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
   activeTab: TabType;
@@ -11,81 +13,116 @@ interface HeaderProps {
   selectedCount: number;
   onClearSelection: () => void;
   onSelectAllFiltered: () => void;
+  isAllFilteredSelected: boolean;
   onCreateCollection: () => void;
   onOpenSettings: () => void;
   aiEnabled: boolean;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
-  activeTab, setActiveTab, matchCount, totalCount, isSearching, selectedCount, onClearSelection, onSelectAllFiltered, onCreateCollection, onOpenSettings, aiEnabled
+const Header: React.FC<HeaderProps> = ({
+  activeTab, setActiveTab, matchCount, totalCount, isSearching, selectedCount, onClearSelection, onSelectAllFiltered, isAllFilteredSelected, onCreateCollection, onOpenSettings, aiEnabled, viewMode, setViewMode
 }) => {
-  const tabs: {id: TabType, label: string}[] = [
+  const tabs: { id: TabType, label: string }[] = [
     { id: 'grid', label: 'Explorer' },
     { id: 'playground', label: 'Sandbox' },
-    ...(aiEnabled ? [{ id: 'generator' as TabType, label: 'AI_Gen' }] : [])
+    ...(aiEnabled ? [{ id: 'generator' as TabType, label: 'AI Generator' }] : [])
   ];
 
   return (
-    <header className="h-16 border-b border-black/10 dark:border-white/10 flex items-center justify-between px-8 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md z-50 shrink-0 sticky top-0" role="banner">
-      <div className="flex items-center gap-12 h-full">
-        <div className="flex flex-col" aria-live="polite">
-          <span className="text-[9px] font-black opacity-30 uppercase tracking-widest">Registry</span>
-          <span className="text-[12px] font-black uppercase font-mono">Core_Registry.05 [{matchCount}/{totalCount}]</span>
+    <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-md">
+      <div className="flex items-center gap-6">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold uppercase tracking-[0.1em] opacity-50">Registry</span>
+          <span className="font-mono text-sm font-bold uppercase">
+            Core_Registry.05 [{matchCount}/{totalCount}]
+          </span>
         </div>
-        <nav className="h-full" aria-label="Main application tabs">
-          <div className="flex gap-8 h-full" role="tablist">
-            {tabs.map(t => (
-              <button 
-                key={t.id} 
-                id={`tab-${t.id}`}
-                role="tab"
-                aria-selected={activeTab === t.id}
-                aria-controls={`panel-${t.id}`}
-                onClick={() => setActiveTab(t.id)} 
-                className={`h-full border-b-2 text-[10px] font-black uppercase tracking-widest transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset ${activeTab === t.id ? 'border-accent text-accent' : 'border-transparent opacity-40 hover:opacity-100'}`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </nav>
       </div>
 
-      <div className="flex items-center gap-4">
+      <nav className="flex flex-1 justify-center">
+        <div className="flex gap-2 rounded-lg bg-muted/50 p-1">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`rounded-md px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all ${activeTab === t.id
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:bg-background/50 hover:text-foreground'
+                }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      <div className="flex items-center gap-3">
         {selectedCount > 0 && (
-          <div className="flex items-center gap-2 pr-4 border-r border-black/10 dark:border-white/10" role="group" aria-label="Bulk selection actions">
-            <button 
-              onClick={onClearSelection} 
-              className="px-3 py-1 text-[9px] font-black uppercase opacity-40 hover:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-accent rounded"
-            >
+          <div className="flex items-center gap-2 border-r pr-3">
+            <Button variant="ghost" size="sm" onClick={onClearSelection} className="h-8 text-[10px] font-bold uppercase tracking-wider">
+              <Trash className="mr-1.5 h-3.5 w-3.5 shrink-0" />
               Clear
-            </button>
-            <button 
-              onClick={onSelectAllFiltered} 
-              className="px-3 py-1 text-[9px] font-black uppercase opacity-40 hover:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-accent rounded"
+            </Button>
+            <Button
+              variant={isAllFilteredSelected ? "secondary" : "ghost"}
+              size="sm"
+              onClick={onSelectAllFiltered}
+              className={`h-8 text-[10px] font-bold uppercase tracking-wider ${isAllFilteredSelected ? "bg-primary/20 text-primary hover:bg-primary/30" : ""}`}
             >
-              Select_Match
-            </button>
-            <button 
-              onClick={onCreateCollection} 
-              className="px-3 py-1 bg-accent/10 border border-accent/20 rounded text-[9px] font-black uppercase text-accent hover:bg-accent/20 transition-all focus-visible:ring-2 focus-visible:ring-accent"
-            >
-              Save_Set
-            </button>
+              {isAllFilteredSelected ? (
+                <>
+                  <Trash className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                  Deselect Match
+                </>
+              ) : (
+                <>
+                  <Check className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                  Select Match
+                </>
+              )}
+            </Button>
+            <Button variant="default" size="sm" onClick={onCreateCollection} className="h-8 gap-2 text-[10px] font-bold uppercase tracking-wider shadow-sm transition-all hover:shadow-md">
+              <Plus className="h-3.5 w-3.5 shrink-0" />
+              Save Set
+              <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary-foreground/20 px-1 text-[9px]">{selectedCount}</span>
+            </Button>
           </div>
         )}
-        <button 
-          onClick={onOpenSettings} 
-          className="p-2.5 bg-black/5 dark:bg-white/5 rounded-full opacity-60 hover:opacity-100 transition-all border border-transparent hover:border-accent focus-visible:ring-2 focus-visible:ring-accent" 
-          aria-label="Open application settings"
+
+        {activeTab === 'grid' && (
+          <div className="flex items-center rounded-lg border bg-muted/30 p-1 mr-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setViewMode('grid')}
+              className={`h-7 w-7 ${viewMode === 'grid' ? 'bg-background shadow-sm' : 'text-muted-foreground'}`}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setViewMode('list')}
+              className={`h-7 w-7 ${viewMode === 'list' ? 'bg-background shadow-sm' : 'text-muted-foreground'}`}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onOpenSettings}
+          className="h-9 w-9 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-          </svg>
-        </button>
+          <Settings className="h-4 w-4 shrink-0" />
+        </Button>
       </div>
     </header>
   );
 };
 
-export default Header;
+export default React.memo(Header);

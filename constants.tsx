@@ -1,131 +1,265 @@
 
 import { IconData } from './types';
 
-/**
- * Professional Icon Generator Core
- * Ensures consistency across geometric primitives for high-fidelity UI systems.
- */
-const generateSystemSet = (category: string, count: number, startId: number = 0): IconData[] => {
-  const variations = [
-    // Geometric Shells
-    'M3 3h18v18H3z', // Square
-    'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z', // Circle
-    'M12 2L2 22h20L12 2z', // Triangle
-    'M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z', // Hex
-    // Abstract Metaphors
-    'M4 6h16M4 12h16M4 18h16', // Lines
-    'M12 2v20M2 12h20', // Cross
-    'M5 5l14 14M19 5L5 19', // X
-    'M3 7l9-4 9 4-9 4-9-4zm0 5l9 4 9-4m-18 5l9 4 9-4', // Stack
-    'M2 12h5l2-9 4 18 3-10 2 3h4', // Pulse
-    'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', // Search
-    'M13 2L3 14h9v8l10-12h-9V2z', // Bolt
-    'M4 4h16v16H4V4zm4 4h8v8H8V8z', // Nested Square
-    'M12 2v4m0 12v4M4.22 4.22l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.22 19.78l2.83-2.83m8.48-8.48l2.83-2.83', // Neural
-    'M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6', // Currency
-    'M3 3h7v7H3V3zm11 0h7v7h-7V3zm0 11h7v7h-7v-7zM3 14h7v7H3v-7z', // Grid
-  ];
-
-  return Array.from({ length: count }).map((_, i) => {
-    const globalIndex = startId + i;
-    const pathIdx = globalIndex % variations.length;
-    return {
-      id: `sys-${category.toLowerCase().replace(/\s+/g, '_')}-${globalIndex}`,
-      name: `asset_${category.toLowerCase().substring(0, 3)}_${(globalIndex + 1).toString().padStart(4, '0')}`,
-      category: category,
-      svgPath: variations[pathIdx],
-    };
-  });
-};
-
 export const ICON_LIBRARY: Record<string, IconData[]> = {
-  "SaaS_Platform": [
-    { 
-      id: "saas-workflow", 
-      name: "node_flow", 
-      category: "SaaS_Platform", 
-      svgPath: "M4 12h4m8 0h4M12 8l4 4-4 4m0-8l-4 4 4 4" 
-    },
-    { 
-      id: "saas-branch", 
-      name: "conditional_branch", 
-      category: "SaaS_Platform", 
-      svgPath: "M3 12h6m0 0l4-6h8m-12 6l4 6h8" 
-    },
-    { 
-      id: "saas-loop", 
-      name: "iteration_cycle", 
-      category: "SaaS_Platform", 
-      svgPath: "M12 2a10 10 0 1 1-7 17l1.5-1.5a8 8 0 1 0 1-11.5l-1.5-1.5" 
-    },
-    { 
-      id: "saas-trigger", 
-      name: "event_trigger", 
-      category: "SaaS_Platform", 
-      svgPath: "M13 2L3 14h9v8l10-12h-9V2z" 
-    },
-    { 
-      id: "saas-broadcast", 
-      name: "message_broadcast", 
-      category: "SaaS_Platform", 
-      svgPath: "M12 12m-2 0a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM12 8V4m0 16v-4M8 12H4m16 0h-4m-2-6l3-3m-9 9l-3 3m0-9l3 3m9 9l-3-3" 
-    },
-    { 
-      id: "saas-funnel", 
-      name: "conversion_funnel", 
-      category: "SaaS_Platform", 
-      svgPath: "M3 3h18l-7 9v6l-4 3v-9L3 3z" 
-    },
-    { 
-      id: "saas-neural", 
-      name: "inference_node", 
-      category: "SaaS_Platform", 
-      svgPath: "M12 12m-3 0a3 3 0 1 0 6 0 3 3 0 0 0-6 0zM12 2v4m0 12v4M2 12h4m12 0h4M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1" 
-    },
-    { 
-      id: "saas-vector", 
-      name: "vector_similarity", 
-      category: "SaaS_Platform", 
-      svgPath: "M2 2l20 20M22 2L2 22M12 3v18M3 12h18" 
-    },
-    { 
-      id: "saas-shield", 
-      name: "policy_enforcer", 
-      category: "SaaS_Platform", 
-      svgPath: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" 
-    },
-    { 
-      id: "saas-pod", 
-      name: "compute_cluster", 
-      category: "SaaS_Platform", 
-      svgPath: "M12 2L3 7v10l9 5 9-5V7l-9-5zM12 22V12M3 7l9 5 9-5M12 12l9 5M12 12L3 17" 
-    }
+  "UI_Actions": [
+    { id: "ui-home", name: "home", category: "UI_Actions", svgPath: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" },
+    { id: "ui-search", name: "search", category: "UI_Actions", svgPath: "M21 21l-5.197-5.197M16 10a6 6 0 11-12 0 6 6 0 0112 0z" },
+    { id: "ui-settings", name: "settings", category: "UI_Actions", svgPath: "M10.325 4.317a1.724 1.724 0 013.35 0l.15.455a1.724 1.724 0 002.573.944l.39-.262a1.724 1.724 0 012.37 2.37l-.263.39a1.724 1.724 0 00.944 2.573l.455.15a1.724 1.724 0 010 3.35l-.455.15a1.724 1.724 0 00-.944 2.573l.262.39a1.724 1.724 0 01-2.37 2.37l-.39-.263a1.724 1.724 0 00-2.573.944l-.15.455a1.724 1.724 0 01-3.35 0l-.15-.455a1.724 1.724 0 00-2.573-.944l-.39.262a1.724 1.724 0 01-2.37-2.37l.263-.39a1.724 1.724 0 00-.944-2.573l-.455-.15a1.724 1.724 0 010-3.35l.455-.15a1.724 1.724 0 00.944-2.573l-.262-.39a1.724 1.724 0 012.37-2.37l.39.263a1.724 1.724 0 002.573-.944l.15-.455zM15 12a3 3 0 11-6 0 3 3 0 016 0z" },
+    { id: "ui-menu", name: "menu", category: "UI_Actions", svgPath: "M4 6h16M4 12h16M4 18h16" },
+    { id: "ui-plus", name: "plus", category: "UI_Actions", svgPath: "M12 4v16m8-8H4" },
+    { id: "ui-minus", name: "minus", category: "UI_Actions", svgPath: "M20 12H4" },
+    { id: "ui-check", name: "check", category: "UI_Actions", svgPath: "M5 13l4 4L19 7" },
+    { id: "ui-x-close", name: "x_close", category: "UI_Actions", svgPath: "M6 18L18 6M6 6l12 12" },
+    { id: "ui-refresh", name: "refresh", category: "UI_Actions", svgPath: "M4 4v5h5M20 20v-5h-5M4.5 9A7.5 7.5 0 0119.5 15M19.5 15A7.5 7.5 0 014.5 9" },
+    { id: "ui-filter", name: "filter", category: "UI_Actions", svgPath: "M3 4h18l-7 8v5l-4 2V12L3 4z" },
+    { id: "ui-sort", name: "sort", category: "UI_Actions", svgPath: "M3 6h7M3 12h5M3 18h3M16 6l4 4-4 4M20 10H10" },
+    { id: "ui-trash", name: "trash", category: "UI_Actions", svgPath: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" },
+    { id: "ui-edit", name: "edit", category: "UI_Actions", svgPath: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" },
+    { id: "ui-copy", name: "copy", category: "UI_Actions", svgPath: "M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3" },
+    { id: "ui-paste", name: "paste", category: "UI_Actions", svgPath: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
+    { id: "ui-external", name: "external_link", category: "UI_Actions", svgPath: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" },
+    { id: "ui-maximize", name: "maximize", category: "UI_Actions", svgPath: "M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" },
+    { id: "ui-minimize", name: "minimize", category: "UI_Actions", svgPath: "M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3" },
+    { id: "ui-eye", name: "eye", category: "UI_Actions", svgPath: "M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7zM15 12a3 3 0 11-6 0 3 3 0 016 0z" },
+    { id: "ui-eye-off", name: "eye_off", category: "UI_Actions", svgPath: "M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18" },
+    { id: "ui-log-in", name: "log_in", category: "UI_Actions", svgPath: "M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" },
+    { id: "ui-log-out", name: "log_out", category: "UI_Actions", svgPath: "M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" },
+    { id: "ui-zap", name: "zap", category: "UI_Actions", svgPath: "M13 2L3 14h9l-1 8 10-12h-9l1-8z" },
+    { id: "ui-command", name: "command", category: "UI_Actions", svgPath: "M18 3a3 3 0 00-3 3v12a3 3 0 003 3 3 3 0 003-3 3 3 0 00-3-3H6a3 3 0 00-3 3 3 3 0 003 3 3 3 0 003-3V6a3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3h12a3 3 0 003-3 3 3 0 00-3-3z" },
+    { id: "ui-more-h", name: "more_horizontal", category: "UI_Actions", svgPath: "M12 13a1 1 0 100-2 1 1 0 000 2zm7 0a1 1 0 100-2 1 1 0 000 2zM5 13a1 1 0 100-2 1 1 0 000 2z" }
   ],
-  "Enterprise_Core": [
-    { id: "ent-neural", name: "neural_node", category: "Enterprise_Core", svgPath: "M12 12m-3 0a3 3 0 1 0 6 0 3 3 0 0 0-6 0zM12 2v4m0 12v4M2 12h4m12 0h4" },
-    { id: "ent-batch", name: "batch_process", category: "Enterprise_Core", svgPath: "M4 4h16v4H4V4zm0 6h16v4H4v-4zm0 6h16v4H4v-4z" },
-    { id: "ent-sync", name: "async_sync", category: "Enterprise_Core", svgPath: "M12 8V4m0 0L9 7m3-3l3 3m-3 9v4m0 0l-3-3m3 3l3-3" },
-    { id: "ent-vault", name: "secure_vault", category: "Enterprise_Core", svgPath: "M12 2L3 7v9c0 5 9 6 9 6s9-1 9-6V7l-9-5zm0 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" },
-    { id: "ent-stream", name: "data_stream", category: "Enterprise_Core", svgPath: "M2 12h20M2 12l3-3m-3 3l3 3m14-3l3-3m-3 3l3 3" },
-    { id: "ent-cloud", name: "cloud_infra", category: "Enterprise_Core", svgPath: "M17.5 19c-3 0-5.5-2.5-5.5-5.5 0-2.5 1.5-4.5 4-5.5 0-3 2.5-5.5 5.5-5.5s5.5 2.5 5.5 5.5c2.5 1 4 3 4 5.5 0 3-2.5 5.5-5.5 5.5H17.5z" },
-    { id: "ent-logic", name: "logic_flow", category: "Enterprise_Core", svgPath: "M3 12h6m6 0h6M9 8h6v8H9V8zm3-6v6m0 8v6" },
-    { id: "ent-cluster", name: "node_cluster", category: "Enterprise_Core", svgPath: "M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1" },
-    { id: "ent-api", name: "api_endpoint", category: "Enterprise_Core", svgPath: "M7 8l-4 4 4 4m10-8l4 4-4 4M13 4l-2 16" },
-    { id: "ent-db", name: "structured_db", category: "Enterprise_Core", svgPath: "M21 12c0 1.66-4 3-9 3s-9-1.34-9-3M21 5c0 1.66-4 3-9 3s-9-1.34-9-3M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" },
-    ...generateSystemSet('Enterprise_Core', 100, 10)
+
+  "Media": [
+    { id: "med-play", name: "play", category: "Media", svgPath: "M5 3l14 9-14 9V3z" },
+    { id: "med-pause", name: "pause", category: "Media", svgPath: "M6 4h4v16H6V4zm8 0h4v16h-4V4z" },
+    { id: "med-stop", name: "stop", category: "Media", svgPath: "M6 4h12v16H6V4z" },
+    { id: "med-skip-fwd", name: "skip_forward", category: "Media", svgPath: "M5 4l10 8-10 8V4zm14 0v16" },
+    { id: "med-skip-back", name: "skip_back", category: "Media", svgPath: "M19 20L9 12l10-8v16zM5 4v16" },
+    { id: "med-rewind", name: "rewind", category: "Media", svgPath: "M11 19l-9-7 9-7v14zm11 0l-9-7 9-7v14z" },
+    { id: "med-fast-fwd", name: "fast_forward", category: "Media", svgPath: "M13 19V5l9 7-9 7zM2 19V5l9 7-9 7z" },
+    { id: "med-volume", name: "volume", category: "Media", svgPath: "M11 5L6 9H2v6h4l5 4V5zm8.07.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07" },
+    { id: "med-mute", name: "volume_mute", category: "Media", svgPath: "M11 5L6 9H2v6h4l5 4V5zm12 4l-6 6m0-6l6 6" },
+    { id: "med-camera", name: "camera", category: "Media", svgPath: "M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v11zM15 13a3 3 0 11-6 0 3 3 0 016 0z" },
+    { id: "med-mic", name: "microphone", category: "Media", svgPath: "M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8" },
+    { id: "med-film", name: "film", category: "Media", svgPath: "M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5M2 4a2 2 0 012-2h16a2 2 0 012 2v16a2 2 0 01-2 2H4a2 2 0 01-2-2V4z" },
+    { id: "med-music", name: "music", category: "Media", svgPath: "M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z" },
+    { id: "med-headphones", name: "headphones", category: "Media", svgPath: "M3 18v-6a9 9 0 0118 0v6M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3v5zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3v5z" },
+    { id: "med-radio", name: "radio", category: "Media", svgPath: "M16.24 7.76a6 6 0 010 8.49m-8.48-.01a6 6 0 010-8.49M20.07 3.93a12 12 0 010 16.14M3.93 20.07a12 12 0 010-16.14M12 12h.01" },
+    { id: "med-podcast", name: "podcast", category: "Media", svgPath: "M12 14a2 2 0 100-4 2 2 0 000 4zm0 0v8M17.66 6.34a8 8 0 010 11.32M6.34 17.66a8 8 0 010-11.32" },
+    { id: "med-screen", name: "screencast", category: "Media", svgPath: "M2 16.1A5 5 0 015.9 20M2 12.05A9 9 0 019.95 20M2 8V6a2 2 0 012-2h16a2 2 0 012 2v12a2 2 0 01-2 2h-6M2 20h.01" },
+    { id: "med-airplay", name: "airplay", category: "Media", svgPath: "M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-1M12 15l5 6H7l5-6z" },
+    { id: "med-disc", name: "disc", category: "Media", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 15a3 3 0 100-6 3 3 0 000 6z" },
+    { id: "med-shuffle", name: "shuffle", category: "Media", svgPath: "M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" }
   ],
-  "AI_Automation": generateSystemSet('AI_Automation', 150),
-  "SaaS_Analytics": generateSystemSet('SaaS_Analytics', 150),
-  "Collaboration": generateSystemSet('Collaboration', 120),
-  "Infrastructure": generateSystemSet('Infrastructure', 100),
-  "Security_Auth": generateSystemSet('Security_Auth', 80),
-  "Design_Tokens": generateSystemSet('Design_Tokens', 100),
-  "Marketing_Ops": generateSystemSet('Marketing_Ops', 90),
-  "Finance_Billing": generateSystemSet('Finance_Billing', 110),
-  "Project_Mgmt": generateSystemSet('Project_Mgmt', 130),
-  "Developer_Exp": generateSystemSet('Developer_Exp', 140),
-  "Health_Bio": generateSystemSet('Health_Bio', 70),
-  "Global_Logistics": generateSystemSet('Global_Logistics', 60),
-  "Media_Creative": generateSystemSet('Media_Creative', 85),
-  "Interface_Utils": generateSystemSet('Interface_Utils', 150),
+
+  "Files": [
+    { id: "fil-file", name: "file", category: "Files", svgPath: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6" },
+    { id: "fil-folder", name: "folder", category: "Files", svgPath: "M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2v11z" },
+    { id: "fil-folder-open", name: "folder_open", category: "Files", svgPath: "M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2l1-5a2 2 0 00-2-2H7a2 2 0 00-2 2l-1 5z" },
+    { id: "fil-doc", name: "document", category: "Files", svgPath: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6M16 13H8m8 4H8m2-8H8" },
+    { id: "fil-archive", name: "archive", category: "Files", svgPath: "M21 8v13H3V8M1 3h22v5H1V3zm9 8h4" },
+    { id: "fil-clipboard", name: "clipboard", category: "Files", svgPath: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
+    { id: "fil-save", name: "save", category: "Files", svgPath: "M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2zM17 21v-8H7v8M7 3v5h8" },
+    { id: "fil-download", name: "download", category: "Files", svgPath: "M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" },
+    { id: "fil-upload", name: "upload", category: "Files", svgPath: "M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" },
+    { id: "fil-image", name: "image", category: "Files", svgPath: "M21 3H3v18h18V3zM8.5 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM21 15l-5-5L5 21" },
+    { id: "fil-file-plus", name: "file_plus", category: "Files", svgPath: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6M12 18v-6M9 15h6" },
+    { id: "fil-file-minus", name: "file_minus", category: "Files", svgPath: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6M9 15h6" },
+    { id: "fil-file-check", name: "file_check", category: "Files", svgPath: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6M9 15l2 2 4-4" },
+    { id: "fil-file-x", name: "file_x", category: "Files", svgPath: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6M9.5 12.5l5 5m0-5l-5 5" },
+    { id: "fil-paperclip", name: "paperclip", category: "Files", svgPath: "M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" },
+    { id: "fil-zip", name: "zip_file", category: "Files", svgPath: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6M10 7h2v2h-2V7zm2 2h2v2h-2V9zm-2 2h2v2h-2v-2zm2 2h2v2h-2v-2z" },
+    { id: "fil-book", name: "book", category: "Files", svgPath: "M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 016.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z" },
+    { id: "fil-bookmark", name: "bookmark", category: "Files", svgPath: "M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z" },
+    { id: "fil-inbox", name: "inbox", category: "Files", svgPath: "M22 12h-6l-2 3H10l-2-3H2M5.45 5.11l2-4.72C7.73.14 8.02 0 8.33 0h7.34c.31 0 .6.14.88.39l2 4.72M22 12v8a2 2 0 01-2 2H4a2 2 0 01-2-2v-8" },
+    { id: "fil-layers", name: "layers", category: "Files", svgPath: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" }
+  ],
+
+  "Devices": [
+    { id: "dev-monitor", name: "monitor", category: "Devices", svgPath: "M2 3h20v14H2V3zm6 18h8M12 17v4" },
+    { id: "dev-smartphone", name: "smartphone", category: "Devices", svgPath: "M6 2h12a2 2 0 012 2v16a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm6 17h.01" },
+    { id: "dev-tablet", name: "tablet", category: "Devices", svgPath: "M5 2h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V4a2 2 0 012-2zm7 17h.01" },
+    { id: "dev-laptop", name: "laptop", category: "Devices", svgPath: "M4 4h16a2 2 0 012 2v10H2V6a2 2 0 012-2zM1 18h22" },
+    { id: "dev-watch", name: "smartwatch", category: "Devices", svgPath: "M12 8v4l2 2M7 2h10v3a5 5 0 010 10v2a5 5 0 000-10V2zM7 22h10v-3" },
+    { id: "dev-printer", name: "printer", category: "Devices", svgPath: "M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z" },
+    { id: "dev-keyboard", name: "keyboard", category: "Devices", svgPath: "M2 6h20v12H2V6zm8 10h4M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01" },
+    { id: "dev-mouse", name: "mouse", category: "Devices", svgPath: "M12 2a6 6 0 00-6 6v8a6 6 0 0012 0V8a6 6 0 00-6-6zm0 0v6" },
+    { id: "dev-speaker", name: "speaker", category: "Devices", svgPath: "M4 2h16v20H4V2zm8 13a3 3 0 100-6 3 3 0 000 6zm0-11h.01" },
+    { id: "dev-tv", name: "television", category: "Devices", svgPath: "M2 7h20v13H2V7zm5-4l5 4 5-4" },
+    { id: "dev-hard-drive", name: "hard_drive", category: "Devices", svgPath: "M22 12H2M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11zM6 16h.01M10 16h.01" },
+    { id: "dev-usb", name: "usb", category: "Devices", svgPath: "M12 22V8M12 2l4 4H8l4-4zM6 12a2 2 0 100 4 2 2 0 000-4zm0 2h6m6-2v4h-2v-4h2z" },
+    { id: "dev-router", name: "router", category: "Devices", svgPath: "M2 14h20v6H2v-6zm4 3h.01M4 14l3-5M20 14l-3-5M12 4v5" },
+    { id: "dev-gamepad", name: "gamepad", category: "Devices", svgPath: "M6 11h4M8 9v4M15 12h.01M18 10h.01M17.32 5H6.68a4 4 0 00-3.978 3.59C2.19 12.327 2 16.261 2 17a3 3 0 006 0l1-3h6l1 3a3 3 0 006 0c0-.74-.19-4.673-.702-8.41A4 4 0 0017.32 5z" },
+    { id: "dev-camera-device", name: "webcam", category: "Devices", svgPath: "M12 16a4 4 0 100-8 4 4 0 000 8zM12 16v4M8 22h8" }
+  ],
+
+  "Communication": [
+    { id: "com-mail", name: "mail", category: "Communication", svgPath: "M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2l8 5 8-5" },
+    { id: "com-send", name: "send", category: "Communication", svgPath: "M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" },
+    { id: "com-chat", name: "chat_bubble", category: "Communication", svgPath: "M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" },
+    { id: "com-chat-dots", name: "chat_dots", category: "Communication", svgPath: "M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10zM8 10h.01M12 10h.01M16 10h.01" },
+    { id: "com-phone", name: "phone", category: "Communication", svgPath: "M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" },
+    { id: "com-phone-off", name: "phone_off", category: "Communication", svgPath: "M10.68 13.31a16 16 0 003.41 2.6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07M1 1l22 22M3.27 11.11a19.79 19.79 0 01-1.15-6.93A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91" },
+    { id: "com-video", name: "video_call", category: "Communication", svgPath: "M15.2 3H4a2 2 0 00-2 2v14a2 2 0 002 2h11.2a2 2 0 002-2V5a2 2 0 00-2-2zM21.8 7.5l-4.6 3v3l4.6 3V7.5z" },
+    { id: "com-at-sign", name: "at_sign", category: "Communication", svgPath: "M16 12a4 4 0 11-8 0 4 4 0 018 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-5.636 8.364" },
+    { id: "com-reply", name: "reply", category: "Communication", svgPath: "M9 17l-5-5 5-5M4 12h11a4 4 0 010 8h-1" },
+    { id: "com-forward", name: "forward", category: "Communication", svgPath: "M15 17l5-5-5-5M20 12H9a4 4 0 000 8h1" },
+    { id: "com-reply-all", name: "reply_all", category: "Communication", svgPath: "M7 17l-5-5 5-5M12 17l-5-5 5-5M7 12h10a4 4 0 010 8h-1" },
+    { id: "com-voicemail", name: "voicemail", category: "Communication", svgPath: "M5.5 16a4.5 4.5 0 100-9 4.5 4.5 0 000 9zm13 0a4.5 4.5 0 100-9 4.5 4.5 0 000 9zm-13 0h13" },
+    { id: "com-rss", name: "rss_feed", category: "Communication", svgPath: "M4 11a9 9 0 019 9M4 4a16 16 0 0116 16M5 20a1 1 0 100-2 1 1 0 000 2z" },
+    { id: "com-broadcast", name: "broadcast", category: "Communication", svgPath: "M12 12h.01M17.657 16.657A8 8 0 106.343 5.343M12 8a4 4 0 014 4M8 16a4 4 0 01-4-4" },
+    { id: "com-bell", name: "notification", category: "Communication", svgPath: "M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" },
+    { id: "com-megaphone", name: "announcement", category: "Communication", svgPath: "M3 11l18-5v12L3 13v-2zm0 0v2M7 15v4a2 2 0 002 2h.5" },
+    { id: "com-inbox-full", name: "inbox_full", category: "Communication", svgPath: "M22 12h-6l-2 3H10l-2-3H2M2 12v8a2 2 0 002 2h16a2 2 0 002-2v-8M7 2h10l4 10H3L7 2z" },
+    { id: "com-message-sq", name: "message_square", category: "Communication", svgPath: "M21 3H3v14h7l4 4 4-4h3V3z" },
+    { id: "com-hash", name: "hash", category: "Communication", svgPath: "M4 9h16M4 15h16M10 3l-2 18M16 3l-2 18" },
+    { id: "com-signal", name: "signal", category: "Communication", svgPath: "M2 20h.01M7 20v-4M12 20v-8M17 20V8M22 20V4" }
+  ],
+
+  "Navigation": [
+    { id: "nav-compass", name: "compass", category: "Navigation", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" },
+    { id: "nav-map", name: "map", category: "Navigation", svgPath: "M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4zM8 2v16M16 6v16" },
+    { id: "nav-globe", name: "globe", category: "Navigation", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" },
+    { id: "nav-pin", name: "map_pin", category: "Navigation", svgPath: "M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0zM15 10a3 3 0 11-6 0 3 3 0 016 0z" },
+    { id: "nav-route", name: "route", category: "Navigation", svgPath: "M6 4a2 2 0 100 4 2 2 0 000-4zM18 16a2 2 0 100 4 2 2 0 000-4zM6 8v1a4 4 0 004 4h4a4 4 0 014 4v1" },
+    { id: "nav-sidebar", name: "sidebar", category: "Navigation", svgPath: "M3 3h18v18H3V3zm6 0v18" },
+    { id: "nav-layout", name: "layout", category: "Navigation", svgPath: "M3 3h18v18H3V3zM3 9h18M9 9v12" },
+    { id: "nav-grid-view", name: "grid_view", category: "Navigation", svgPath: "M3 3h7v7H3V3zm11 0h7v7h-7V3zm0 11h7v7h-7v-7zM3 14h7v7H3v-7z" },
+    { id: "nav-list-view", name: "list_view", category: "Navigation", svgPath: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" },
+    { id: "nav-columns", name: "columns", category: "Navigation", svgPath: "M12 3h7a2 2 0 012 2v14a2 2 0 01-2 2h-7M12 3H5a2 2 0 00-2 2v14a2 2 0 002 2h7M12 3v18" },
+    { id: "nav-crosshair", name: "crosshair", category: "Navigation", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM22 12h-4M6 12H2M12 6V2M12 22v-4" },
+    { id: "nav-corner-up", name: "corner_up_right", category: "Navigation", svgPath: "M15 14l5-5-5-5M20 9H9.5A3.5 3.5 0 006 12.5V20" },
+    { id: "nav-external-lnk", name: "external_nav", category: "Navigation", svgPath: "M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" },
+    { id: "nav-menu-alt", name: "menu_alt", category: "Navigation", svgPath: "M3 12h18M3 6h18M3 18h12" },
+    { id: "nav-more-vert", name: "more_vertical", category: "Navigation", svgPath: "M12 5a1 1 0 100-2 1 1 0 000 2zm0 7a1 1 0 100-2 1 1 0 000 2zm0 7a1 1 0 100-2 1 1 0 000 2z" },
+    { id: "nav-panel-left", name: "panel_left", category: "Navigation", svgPath: "M3 3h18v18H3V3zm5 0v18" },
+    { id: "nav-panel-right", name: "panel_right", category: "Navigation", svgPath: "M3 3h18v18H3V3zm13 0v18" },
+    { id: "nav-breadcrumb", name: "breadcrumb", category: "Navigation", svgPath: "M3 12h2M9 12h2M15 12h2M6 8l4 4-4 4M12 8l4 4-4 4M18 8l4 4-4 4" },
+    { id: "nav-home-alt", name: "home_alt", category: "Navigation", svgPath: "M3 12l9-9 9 9M5 10v10h14V10" },
+    { id: "nav-sitemap", name: "sitemap", category: "Navigation", svgPath: "M12 2v8M4 14v6h6v-6H4zm10 0v6h6v-6h-6zM7 14v-4h10v4M12 10v4" }
+  ],
+
+  "Alerts": [
+    { id: "alt-alert-tri", name: "alert_triangle", category: "Alerts", svgPath: "M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" },
+    { id: "alt-alert-circle", name: "alert_circle", category: "Alerts", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 8v4M12 16h.01" },
+    { id: "alt-info", name: "info", category: "Alerts", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 16v-4M12 8h.01" },
+    { id: "alt-help", name: "help_circle", category: "Alerts", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" },
+    { id: "alt-check-circle", name: "check_circle", category: "Alerts", svgPath: "M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01l-3-3" },
+    { id: "alt-x-circle", name: "x_circle", category: "Alerts", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM15 9l-6 6M9 9l6 6" },
+    { id: "alt-x-oct", name: "x_octagon", category: "Alerts", svgPath: "M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86L7.86 2zM15 9l-6 6M9 9l6 6" },
+    { id: "alt-bell-ring", name: "bell_ring", category: "Alerts", svgPath: "M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0M2 2l2 2M22 2l-2 2" },
+    { id: "alt-bell-off", name: "bell_off", category: "Alerts", svgPath: "M13.73 21a2 2 0 01-3.46 0M18.63 13A17.89 17.89 0 0118 8M6.26 6.26A5.86 5.86 0 006 8c0 7-3 9-3 9h14M1 1l22 22" },
+    { id: "alt-siren", name: "siren", category: "Alerts", svgPath: "M12 2v2M4 10H2M6.3 5.3L4.9 3.9M17.7 5.3l1.4-1.4M22 10h-2M12 4a6 6 0 016 6v4H6v-4a6 6 0 016-6zM5 18h14M8 22h8" },
+    { id: "alt-shield-alert", name: "shield_alert", category: "Alerts", svgPath: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM12 8v4M12 16h.01" },
+    { id: "alt-ban", name: "ban", category: "Alerts", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM4.93 4.93l14.14 14.14" },
+    { id: "alt-alert-oct", name: "alert_octagon", category: "Alerts", svgPath: "M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86L7.86 2zM12 8v4M12 16h.01" },
+    { id: "alt-flame", name: "flame", category: "Alerts", svgPath: "M12 22c4-2 8-6 8-11a8 8 0 00-16 0c0 5 4 9 8 11zM12 22c-2-1-4-3-4-6a4 4 0 018 0c0 3-2 5-4 6z" },
+    { id: "alt-urgent", name: "urgent", category: "Alerts", svgPath: "M12 3v12M12 21h.01M4 8l2 1M20 8l-2 1" }
+  ],
+
+  "Commerce": [
+    { id: "ecom-cart", name: "shopping_cart", category: "Commerce", svgPath: "M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6M9 22a1 1 0 100-2 1 1 0 000 2zm11 0a1 1 0 100-2 1 1 0 000 2z" },
+    { id: "ecom-bag", name: "shopping_bag", category: "Commerce", svgPath: "M6 2l-2 5v13a2 2 0 002 2h12a2 2 0 002-2V7l-2-5H6zM3 7h18M16 10a4 4 0 01-8 0" },
+    { id: "ecom-tag", name: "tag", category: "Commerce", svgPath: "M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82zM7 7h.01" },
+    { id: "ecom-credit", name: "credit_card", category: "Commerce", svgPath: "M2 5h20a1 1 0 011 1v12a1 1 0 01-1 1H2a1 1 0 01-1-1V6a1 1 0 011-1zM1 10h22" },
+    { id: "ecom-receipt", name: "receipt", category: "Commerce", svgPath: "M4 2v20l3-2 3 2 3-2 3 2 3-2 3 2V2l-3 2-3-2-3 2-3-2-3 2-3-2zM8 10h8M8 14h5" },
+    { id: "ecom-wallet", name: "wallet", category: "Commerce", svgPath: "M20 7H4a2 2 0 01-2-2V4a2 2 0 012-2h14a2 2 0 012 2v1M2 7h18a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7zm16 5h.01" },
+    { id: "ecom-gift", name: "gift", category: "Commerce", svgPath: "M3 8h18v4H3V8zm9-4c-1.333 0-4 1.333-4 4m4-4c1.333 0 4 1.333 4 4M5 12v8a1 1 0 001 1h12a1 1 0 001-1v-8M12 8v13" },
+    { id: "ecom-store", name: "store", category: "Commerce", svgPath: "M3 9l1-5h16l1 5M3 9v12h18V9M3 9h18M9 21V13h6v8" },
+    { id: "ecom-barcode", name: "barcode", category: "Commerce", svgPath: "M4 4v16M8 4v16M12 4v16M16 4v16M20 4v16M6 4v16M10 4v16M14 4v16M18 4v16" },
+    { id: "ecom-percent", name: "percent", category: "Commerce", svgPath: "M19 5L5 19M6.5 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm11 11a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" },
+    { id: "ecom-dollar", name: "dollar", category: "Commerce", svgPath: "M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" },
+    { id: "ecom-coins", name: "coins", category: "Commerce", svgPath: "M12 16a6 6 0 100-12 6 6 0 000 12zm-3 3.5A6 6 0 003 14M15 19.5a6 6 0 006-5.5" },
+    { id: "ecom-bank", name: "bank", category: "Commerce", svgPath: "M3 21h18M3 10h18M5 6l7-4 7 4M4 10v8M8 10v8M12 10v8M16 10v8M20 10v8" },
+    { id: "ecom-truck", name: "delivery", category: "Commerce", svgPath: "M16 3H1v13h15V3zM16 8h4l3 4v5h-7V8zM5.5 21a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm13 0a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" },
+    { id: "ecom-package", name: "package", category: "Commerce", svgPath: "M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16zM3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" },
+    { id: "ecom-returns", name: "returns", category: "Commerce", svgPath: "M3 12h13a5 5 0 010 10H3M3 12l5-5M3 12l5 5" },
+    { id: "ecom-coupon", name: "coupon", category: "Commerce", svgPath: "M2 6h20v4a2 2 0 100 4v4H2v-4a2 2 0 100-4V6zM10 6v12" },
+    { id: "ecom-handshake", name: "handshake", category: "Commerce", svgPath: "M2 14l5 5 4-4M22 14l-5 5-4-4M9 10l2 2 4-4M2 10h5M17 10h5" },
+    { id: "ecom-award", name: "award", category: "Commerce", svgPath: "M12 15a7 7 0 100-14 7 7 0 000 14zM8.21 13.89L7 23l5-3 5 3-1.21-9.12" },
+    { id: "ecom-qr", name: "qr_code", category: "Commerce", svgPath: "M3 3h6v6H3V3zm12 0h6v6h-6V3zM3 15h6v6H3v-6zM15 15h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2z" }
+  ],
+
+  "Weather": [
+    { id: "wea-sun", name: "sun", category: "Weather", svgPath: "M12 17a5 5 0 100-10 5 5 0 000 10zM12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" },
+    { id: "wea-moon", name: "moon", category: "Weather", svgPath: "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" },
+    { id: "wea-cloud", name: "cloud", category: "Weather", svgPath: "M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" },
+    { id: "wea-rain", name: "rain", category: "Weather", svgPath: "M16 13V8a4 4 0 00-8 0v5M8 13a4 4 0 008 0M6 18l.7 2M10 18l.7 2M14 18l.7 2M18 18l.7 2M8 22l.7 2M12 22l.7 2M16 22l.7 2" },
+    { id: "wea-cloud-rain", name: "cloud_rain", category: "Weather", svgPath: "M20 16.58A5 5 0 0018 7h-1.26A8 8 0 104 15.25M16 14v6M8 14v6M12 16v6" },
+    { id: "wea-snow", name: "snow", category: "Weather", svgPath: "M20 17.58A5 5 0 0018 8h-1.26A8 8 0 104 16.25M8 16h.01M8 20h.01M12 18h.01M12 22h.01M16 16h.01M16 20h.01" },
+    { id: "wea-wind", name: "wind", category: "Weather", svgPath: "M9.59 4.59A2 2 0 1111 8H2m10.59 11.41A2 2 0 1014 16H2m15.73-8.27A2.5 2.5 0 1119.5 12H2" },
+    { id: "wea-lightning", name: "lightning", category: "Weather", svgPath: "M19 16.9A5 5 0 0018 7h-1.26a8 8 0 10-11.62 9M13 11l-4 6h6l-4 6" },
+    { id: "wea-thermo", name: "thermometer", category: "Weather", svgPath: "M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z" },
+    { id: "wea-umbrella", name: "umbrella", category: "Weather", svgPath: "M23 12a11.05 11.05 0 00-22 0zm-5 7a3 3 0 01-6 0M12 2v10" },
+    { id: "wea-sunrise", name: "sunrise", category: "Weather", svgPath: "M17 18a5 5 0 00-10 0M12 2v7M4.22 10.22l1.42 1.42M1 18h2M21 18h2M18.36 11.64l1.42-1.42M23 22H1M8 6l4-4 4 4" },
+    { id: "wea-sunset", name: "sunset", category: "Weather", svgPath: "M17 18a5 5 0 00-10 0M12 9v7M4.22 10.22l1.42 1.42M1 18h2M21 18h2M18.36 11.64l1.42-1.42M23 22H1M16 5l-4 4-4-4" },
+    { id: "wea-cloudy", name: "cloudy", category: "Weather", svgPath: "M12 2v2M4.93 4.93l1.41 1.41M20 12h2M17.66 17.66l1.41 1.41M2 12h2M6.34 17.66l-1.41 1.41M12 20v2M17.07 4.93l1.41-1.41M17 12a5 5 0 01-10 0" },
+    { id: "wea-fog", name: "fog", category: "Weather", svgPath: "M20 12A8.94 8.94 0 0012 8 8.94 8.94 0 004 12M3 16h18M5 20h14" },
+    { id: "wea-droplet", name: "droplet", category: "Weather", svgPath: "M12 2.69l5.66 5.66a8 8 0 11-11.31 0L12 2.69z" }
+  ],
+
+  "Social": [
+    { id: "soc-heart", name: "heart", category: "Social", svgPath: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" },
+    { id: "soc-star", name: "star", category: "Social", svgPath: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
+    { id: "soc-thumbs-up", name: "thumbs_up", category: "Social", svgPath: "M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3" },
+    { id: "soc-thumbs-down", name: "thumbs_down", category: "Social", svgPath: "M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 002 2.3H10zM17 2h2.67A2.31 2.31 0 0122 4v7a2.31 2.31 0 01-2.33 2H17" },
+    { id: "soc-share", name: "share", category: "Social", svgPath: "M18 8a3 3 0 100-6 3 3 0 000 6zm-12 7a3 3 0 100-6 3 3 0 000 6zm12 7a3 3 0 100-6 3 3 0 000 6zM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" },
+    { id: "soc-bookmark-fill", name: "bookmark_filled", category: "Social", svgPath: "M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z" },
+    { id: "soc-flag", name: "flag", category: "Social", svgPath: "M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1v12zM4 22v-7" },
+    { id: "soc-trophy", name: "trophy", category: "Social", svgPath: "M8 21h8M12 17v4M6 3h12v5a6 6 0 01-12 0V3zM6 5H2v2a4 4 0 004 4M18 5h4v2a4 4 0 01-4 4" },
+    { id: "soc-smile", name: "smile", category: "Social", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" },
+    { id: "soc-frown", name: "frown", category: "Social", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM16 16s-1.5-2-4-2-4 2-4 2M9 9h.01M15 9h.01" },
+    { id: "soc-meh", name: "meh", category: "Social", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM8 15h8M9 9h.01M15 9h.01" },
+    { id: "soc-crown", name: "crown", category: "Social", svgPath: "M2 18l3-12 5 6 2-8 2 8 5-6 3 12H2z" },
+    { id: "soc-gem", name: "gem", category: "Social", svgPath: "M6 3h12l4 6-10 13L2 9l4-6zM2 9h20M12 22L8 9M12 22l4-13M8 3l-2 6M16 3l2 6M12 3v6" },
+    { id: "soc-medal", name: "medal", category: "Social", svgPath: "M12 17a5 5 0 100-10 5 5 0 000 10zM8.21 13.89L7 23l5-3 5 3-1.21-9.11" },
+    { id: "soc-fire", name: "fire", category: "Social", svgPath: "M12 22c4.418 0 8-3.582 8-8 0-3.5-2-6.5-4-8-.5 2-2 3-4 3s-3.5-1-4-3c-2 1.5-4 4.5-4 8 0 4.418 3.582 8 8 8z" }
+  ],
+
+  "Editing": [
+    { id: "edt-pen", name: "pen_tool", category: "Editing", svgPath: "M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586M11 13a2 2 0 100-4 2 2 0 000 4z" },
+    { id: "edt-pencil", name: "pencil", category: "Editing", svgPath: "M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" },
+    { id: "edt-eraser", name: "eraser", category: "Editing", svgPath: "M21 21H10L3.29 14.29a1 1 0 010-1.41l9.59-9.59a1 1 0 011.41 0l8.42 8.42a1 1 0 010 1.41L16 20M10 21h11" },
+    { id: "edt-scissors", name: "scissors", category: "Editing", svgPath: "M6 9a3 3 0 100-6 3 3 0 000 6zM6 21a3 3 0 100-6 3 3 0 000 6zM20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12" },
+    { id: "edt-type", name: "type", category: "Editing", svgPath: "M4 7V4h16v3M9 20h6M12 4v16" },
+    { id: "edt-bold", name: "bold", category: "Editing", svgPath: "M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6V4zm0 8h9a4 4 0 014 4 4 4 0 01-4 4H6v-8z" },
+    { id: "edt-italic", name: "italic", category: "Editing", svgPath: "M19 4h-9M14 20H5M15 4L9 20" },
+    { id: "edt-underline", name: "underline", category: "Editing", svgPath: "M6 3v7a6 6 0 006 6 6 6 0 006-6V3M4 21h16" },
+    { id: "edt-strikethrough", name: "strikethrough", category: "Editing", svgPath: "M16 4c-.67-.55-2.25-1-4-1-3 0-5 1.5-5 4 0 1.5 1 3 5 4M3 12h18M8 20c.67.55 2.25 1 4 1 3 0 5-1.5 5-4 0-1.5-1-3-5-4" },
+    { id: "edt-align-left", name: "align_left", category: "Editing", svgPath: "M17 10H3M21 6H3M21 14H3M17 18H3" },
+    { id: "edt-align-center", name: "align_center", category: "Editing", svgPath: "M18 10H6M21 6H3M21 14H3M18 18H6" },
+    { id: "edt-align-right", name: "align_right", category: "Editing", svgPath: "M21 10H7M21 6H3M21 14H3M21 18H7" },
+    { id: "edt-link", name: "link", category: "Editing", svgPath: "M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" },
+    { id: "edt-unlink", name: "unlink", category: "Editing", svgPath: "M18.84 12.25l1.72-1.71A5 5 0 0013.49 3.46l-2 2M5.16 11.75l-1.72 1.71a5 5 0 007.07 7.07l2-2M2 2l20 20" },
+    { id: "edt-crop", name: "crop", category: "Editing", svgPath: "M6.13 1L6 16a2 2 0 002 2h15M1 6.13L16 6a2 2 0 012 2v15" },
+    { id: "edt-rotate-cw", name: "rotate_clockwise", category: "Editing", svgPath: "M21 2v6h-6M21 13a9 9 0 11-3-7.7L21 8" },
+    { id: "edt-rotate-ccw", name: "rotate_counter", category: "Editing", svgPath: "M3 2v6h6M3 13a9 9 0 103-7.7L3 8" },
+    { id: "edt-palette", name: "palette", category: "Editing", svgPath: "M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10c1.1 0 2-.9 2-2 0-.51-.2-1-.52-1.36-.31-.35-.48-.82-.48-1.14 0-1.1.9-2 2-2h2.36c3.07 0 5.64-2.57 5.64-5.64C22 6.04 17.52 2 12 2zM5.5 12a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm3-4a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm7 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm3 4a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" },
+    { id: "edt-dropper", name: "eyedropper", category: "Editing", svgPath: "M2 22l1-1h3l9-9M12 3l4 4M3 21l9-9m6.54-6.54a3 3 0 00-4.24 0L12 7.76l4.24 4.24 2.3-2.3a3 3 0 000-4.24z" },
+    { id: "edt-highlight", name: "highlight", category: "Editing", svgPath: "M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" }
+  ],
+
+  "Arrows": [
+    { id: "arr-up", name: "arrow_up", category: "Arrows", svgPath: "M12 19V5m0 0l-7 7m7-7l7 7" },
+    { id: "arr-down", name: "arrow_down", category: "Arrows", svgPath: "M12 5v14m0 0l7-7m-7 7l-7-7" },
+    { id: "arr-left", name: "arrow_left", category: "Arrows", svgPath: "M19 12H5m0 0l7 7m-7-7l7-7" },
+    { id: "arr-right", name: "arrow_right", category: "Arrows", svgPath: "M5 12h14m0 0l-7-7m7 7l-7 7" },
+    { id: "arr-chev-up", name: "chevron_up", category: "Arrows", svgPath: "M18 15l-6-6-6 6" },
+    { id: "arr-chev-down", name: "chevron_down", category: "Arrows", svgPath: "M6 9l6 6 6-6" },
+    { id: "arr-chev-left", name: "chevron_left", category: "Arrows", svgPath: "M15 18l-6-6 6-6" },
+    { id: "arr-chev-right", name: "chevron_right", category: "Arrows", svgPath: "M9 18l6-6-6-6" },
+    { id: "arr-chev-dbl-up", name: "chevrons_up", category: "Arrows", svgPath: "M17 11l-5-5-5 5M17 18l-5-5-5 5" },
+    { id: "arr-chev-dbl-down", name: "chevrons_down", category: "Arrows", svgPath: "M7 13l5 5 5-5M7 6l5 5 5-5" },
+    { id: "arr-move", name: "move", category: "Arrows", svgPath: "M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20" },
+    { id: "arr-undo", name: "undo", category: "Arrows", svgPath: "M3 7v6h6M3 13a9 9 0 0118 0" },
+    { id: "arr-redo", name: "redo", category: "Arrows", svgPath: "M21 7v6h-6M21 13a9 9 0 00-18 0" },
+    { id: "arr-corner-dl", name: "corner_down_left", category: "Arrows", svgPath: "M9 10l-5 5 5 5M20 4v7a4 4 0 01-4 4H4" },
+    { id: "arr-corner-dr", name: "corner_down_right", category: "Arrows", svgPath: "M15 10l5 5-5 5M4 4v7a4 4 0 004 4h12" },
+    { id: "arr-corner-ul", name: "corner_up_left", category: "Arrows", svgPath: "M9 14l-5-5 5-5M20 20v-7a4 4 0 00-4-4H4" },
+    { id: "arr-repeat", name: "repeat", category: "Arrows", svgPath: "M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3" },
+    { id: "arr-swap-h", name: "swap_horizontal", category: "Arrows", svgPath: "M16 3l4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16" },
+    { id: "arr-maximize-2", name: "expand", category: "Arrows", svgPath: "M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" },
+    { id: "arr-minimize-2", name: "collapse", category: "Arrows", svgPath: "M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7" }
+  ],
 };

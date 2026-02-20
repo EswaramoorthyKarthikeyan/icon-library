@@ -1,118 +1,91 @@
-
 <!DOCTYPE html>
 <html lang="en" class="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Core UI System Explorer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              background: '#0a0a0a',
-              surface: '#111111',
-              border: 'rgba(153, 153, 153, 0.1)',
-              primary: '#999999',
-              accent: 'var(--system-accent)',
-            },
-            fontFamily: {
-              sans: ['var(--font-primary)', 'Inter', 'sans-serif'],
-              mono: ['var(--font-mono)', 'JetBrains Mono', 'monospace'],
-            },
-          },
-        },
-      };
-    </script>
-    <style>
-      :root {
-        --system-accent: #000000;
-        --grid-opacity: 0.08;
-        --font-primary: 'Inter', sans-serif;
-        --font-mono: 'JetBrains Mono', monospace;
-      }
-      
-      html.dark {
-        --system-accent: #ffffff;
-      }
 
-      body {
-        margin: 0;
-        font-family: var(--font-primary);
-        overflow: hidden;
-        transition: background-color 0.3s ease, color 0.3s ease;
-      }
-      
-      html.dark body {
-        background-color: #0a0a0a;
-        color: #e0e0e0;
-      }
-      
-      html:not(.dark) body {
-        background-color: #f1f3f6;
-        color: #1a1a1a;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Core UI System Explorer</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --system-accent: #0969da;
+      --grid-opacity: 0.05;
+      --font-primary: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --canvas-subtle: #f6f8fa;
+      --border-default: #eceef0;
+    }
 
-      .font-mono {
-        font-family: var(--font-mono);
-      }
+    html.dark {
+      --system-accent: #2f81f7;
+      --grid-opacity: 0.1;
+      --canvas-subtle: #0d1117;
+      --border-default: #21262d;
+    }
 
-      .blueprint-grid {
-        background-size: 30px 30px;
-        transition: background-image 0.3s ease;
-      }
+    body {
+      margin: 0;
+      font-family: var(--font-primary);
+      overflow: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      background-color: var(--canvas-subtle);
+    }
 
-      html.dark .blueprint-grid {
-        background-image: 
-          linear-gradient(to right, rgba(255, 255, 255, var(--grid-opacity)) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(255, 255, 255, var(--grid-opacity)) 1px, transparent 1px);
-      }
+    .font-mono {
+      font-family: var(--font-mono);
+    }
 
-      html:not(.dark) .blueprint-grid {
-        background-image: 
-          linear-gradient(to right, rgba(0, 0, 0, var(--grid-opacity)) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(0, 0, 0, var(--grid-opacity)) 1px, transparent 1px);
-      }
+    .blueprint-grid {
+      background-size: 24px 24px;
+      transition: background-image 0.3s ease;
+      background-image:
+        linear-gradient(to right, var(--color-border-subtle, rgba(0, 0, 0, 0.05)) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--color-border-subtle, rgba(0, 0, 0, 0.05)) 1px, transparent 1px);
+    }
 
-      /* Density Overrides */
-      .density-compact .blueprint-grid > div {
-        padding: 1.5rem;
-      }
+    html.dark .blueprint-grid {
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    }
 
-      ::-webkit-scrollbar {
-        width: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
-      }
-      html.dark ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(0, 0, 0, 0.2);
-      }
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
 
-      /* Code Scrollbar */
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 4px;
-        height: 4px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 2px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.2);
-      }
-    </style>
-    <script type="importmap">
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      border: 2px solid transparent;
+      background-clip: content-box;
+    }
+
+    html.dark ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      background-clip: content-box;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.2);
+      background-clip: content-box;
+    }
+
+    .glass {
+      backdrop-filter: blur(8px);
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    html.dark .glass {
+      background: rgba(13, 17, 23, 0.8);
+    }
+  </style>
+  <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@19.0.0",
@@ -121,13 +94,15 @@
     "react-dom/": "https://esm.sh/react-dom@19.0.0/",
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
     "jszip": "https://esm.sh/jszip@3.10.1",
-    "@google/genai": "https://esm.sh/@google/genai@^1.41.0"
+    "@google/generative-ai": "https://esm.sh/@google/generative-ai@^0.21.0"
   }
 }
 </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
-  </body>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="./index.tsx"></script>
+</body>
+
 </html>

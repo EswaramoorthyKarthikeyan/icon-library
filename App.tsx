@@ -1,504 +1,356 @@
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import Sidebar from './components/Sidebar.tsx';
+import React, { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
+import { TabType, AIProviderId, AIProviderConfig } from './types';
+
+// Custom hooks
+import { useSettings } from './hooks/useSettings';
+import { useAI } from './hooks/useAI';
+import { useIconLibrary } from './hooks/useIconLibrary';
+
+// Eagerly loaded components
 import Header from './components/Header.tsx';
+import Sidebar from './components/Sidebar.tsx';
+import Footer from './components/Footer.tsx';
 import IconGrid from './components/IconGrid.tsx';
 import Inspector from './components/Inspector.tsx';
-import Footer from './components/Footer.tsx';
-import Playground from './components/Playground.tsx';
-import Generator from './components/Generator.tsx';
 import SettingsModal from './components/SettingsModal.tsx';
-import { ICON_LIBRARY } from './constants.tsx';
-import { ViewportSize, Weighting, TabType, IconData, AppSettings, Collection, IconAiMetadata, IconTransform } from './types.ts';
-import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import JSZip from 'jszip';
+import ErrorBoundary from './components/ErrorBoundary.tsx';
+import AiKeyPrompt from './components/AiKeyPrompt.tsx';
+import { validateProviderKey } from './hooks/ai-providers/factory';
 
-// Exponential backoff helper for robust API handling
-const withBackoff = async <T,>(fn: () => Promise<T>, maxRetries = 3): Promise<T> => {
-  let delay = 1000;
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await fn();
-    } catch (error: any) {
-      const isRetryable = error?.message?.includes('429') || error?.message?.includes('RESOURCE_EXHAUSTED') || error?.message?.includes('500');
-      if (isRetryable && i < maxRetries - 1) {
-        await new Promise(resolve => setTimeout(resolve, delay));
-        delay *= 2;
-        continue;
-      }
-      throw error;
-    }
-  }
-  return await fn();
-};
+// Shadcn components
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { Loader2 } from "lucide-react";
+
+// Lazy-loaded heavy tabs
+const Generator = React.lazy(() => import('./components/Generator.tsx'));
+const Playground = React.lazy(() => import('./components/Playground.tsx'));
+
+/** Loading fallback for Suspense boundaries */
+const TabLoader: React.FC = () => (
+	<div className="flex h-full items-center justify-center gap-3">
+		<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+		<span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Loading_Module...</span>
+	</div>
+);
 
 const App: React.FC = () => {
-  const getInitialTheme = () => {
-    const hour = new Date().getHours();
-    return (hour >= 7 && hour < 19) ? 'light' : 'dark';
-  };
+	// ─── UI State ─────────────────────────────────────────────
+	const [activeTab, setActiveTab] = useState<TabType>('grid');
+	const [showSettings, setShowSettings] = useState(false);
 
-  // UI State
-  const [viewportSize, setViewportSize] = useState<ViewportSize>(24);
-  const [weighting, setWeighting] = useState<Weighting>('regular');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<TabType>('grid');
-  const [theme, setTheme] = useState<'dark' | 'light'>(getInitialTheme());
-  const [accentColor, setAccentColor] = useState<string>('');
-  const [customFillColor, setCustomFillColor] = useState<string>('none');
-  
-  // Transformation State
-  const [transform, setTransform] = useState<IconTransform>({
-    rotate: 0,
-    scale: 1,
-    flipH: false,
-    flipV: false
-  });
+	// ─── Settings, Theme, Collections ─────────────────────────
+	const {
+		viewportSize, setViewportSize,
+		weighting, setWeighting,
+		theme, setTheme,
+		accentColor, setAccentColor,
+		customFillColor, setCustomFillColor,
+		transform, setTransform,
+		settings, handleUpdateSettings,
+		collections, setCollections,
+	} = useSettings();
 
-  // AI State
-  const [isAiSearching, setIsAiSearching] = useState(false);
-  const [aiSearchResults, setAiSearchResults] = useState<string[] | null>(null);
-  const [aiMetadataCache, setAiMetadataCache] = useState<Record<string, IconAiMetadata>>({});
-  const [relatedIconsCache, setRelatedIconsCache] = useState<Record<string, string[]>>({});
-  const [isGeneratingMetadata, setIsGeneratingMetadata] = useState(false);
-  const [synthesizedIcons, setSynthesizedIcons] = useState<Record<string, IconData[]>>({});
-  const [synthesizingCategory, setSynthesizingCategory] = useState<string | null>(null);
-  const [apiError, setApiError] = useState<string | null>(null);
+	// ─── Theme Effect ─────────────────────────────────────────
+	// Handled by useSettings hook directly
 
-  // Selection & Collections State
-  const [activeIconId, setActiveIconId] = useState<string | null>('nav-grid');
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(['nav-grid']));
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null);
-  const [collections, setCollections] = useState<Collection[]>([]);
+	// ─── AI Availability ─────────────────────────────────────
+	const isAiAvailable = useMemo(() => {
+		const activeProvider = settings.providers[settings.activeProvider];
+		return settings.aiEnabled && !!activeProvider.apiKey && validateProviderKey(settings.activeProvider, activeProvider.apiKey);
+	}, [settings.aiEnabled, settings.activeProvider, settings.providers]);
 
-  // Modal / Overlay States
-  const [isInspectorOpen, setIsInspectorOpen] = useState(true);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+	const showAiPrompt = useMemo(() => {
+		// Check if ANY provider has a key
+		const hasAnyKey = (Object.values(settings.providers) as AIProviderConfig[]).some(p => p.apiKey && p.apiKey !== 'none' && p.apiKey.length > 5);
+		return !settings.hasSeenAiPrompt && !hasAnyKey;
+	}, [settings.hasSeenAiPrompt, settings.providers]);
 
-  // App Settings State
-  const [settings, setSettings] = useState<AppSettings>({
-    showGrid: true,
-    gridOpacity: 0.08,
-    uiDensity: 'standard',
-    autoExportFolders: true,
-    primaryFont: 'Inter',
-    monoFont: 'JetBrains Mono',
-    semanticSearchEnabled: false,
-    aiEnabled: true,
-    namingValidationEnabled: false,
-  });
+	// ─── Active Icon ──────────────────────────────────────────
+	const [activeIconId, setActiveIconId] = useState<string | null>('nav-grid');
 
-  const handleUpdateSettings = (newSettings: Partial<AppSettings>) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
-  };
+	// ─── AI Features ──────────────────────────────────────────
+	const ai = useAI({
+		settings,
+		allIcons: [], // placeholder, logic handles semantic search separately
+		activeIconId,
+		activeTab,
+		setActiveTab,
+	});
 
-  useEffect(() => {
-    if (!settings.aiEnabled) {
-      if (activeTab === 'generator') setActiveTab('grid');
-      setAiSearchResults(null);
-      setAiMetadataCache({});
-      setRelatedIconsCache({});
-      setSynthesizedIcons({});
-      setApiError(null);
-    }
-  }, [settings.aiEnabled, activeTab]);
+	// ─── Icon Library ─────────────────────────────────────────
+	const library = useIconLibrary({
+		settings,
+		weighting,
+		transform,
+		customFillColor,
+		collections,
+		synthesizedIcons: ai.synthesizedIcons,
+		aiMetadataCache: ai.aiMetadataCache,
+		aiSearchResults: ai.aiSearchResults,
+	});
 
-  useEffect(() => {
-    const saved = localStorage.getItem('core_ui_collections');
-    if (saved) {
-      try { setCollections(JSON.parse(saved)); } catch (e) { console.error(e); }
-    }
-  }, []);
+	// Sync activeIconId for AI effects
+	useEffect(() => {
+		setActiveIconId(library.activeIconId);
+	}, [library.activeIconId]);
 
-  useEffect(() => {
-    localStorage.setItem('core_ui_collections', JSON.stringify(collections));
-  }, [collections]);
+	// ─── Debounced Semantic Search ────────────────────────────
+	useEffect(() => {
+		if (!settings.aiEnabled || !settings.semanticSearchEnabled) return;
+		const timer = setTimeout(() => {
+			ai.performSemanticSearch(library.searchQuery);
+			if (library.searchQuery.trim()) {
+				library.addToSearchHistory(library.searchQuery);
+			}
+		}, 1000);
+		return () => clearTimeout(timer);
+	}, [library.searchQuery, settings.aiEnabled, settings.semanticSearchEnabled, library.addToSearchHistory]);
 
-  useEffect(() => {
-    const defaultColor = theme === 'dark' ? '#ffffff' : '#000000';
-    document.documentElement.style.setProperty('--system-accent', accentColor || defaultColor);
-    if (theme === 'dark') document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
-  }, [theme, accentColor]);
+	// ─── Collection Management ────────────────────────────────
+	const handleCreateCollection = useCallback(() => {
+		if (library.selectedIds.size === 0) return;
+		const name = prompt('Name this collection:');
+		if (!name) return;
+		const newCol: any = {
+			id: `col-${Date.now()}`,
+			name,
+			iconIds: Array.from(library.selectedIds),
+			createdAt: Date.now(),
+		};
+		setCollections(prev => [...prev, newCol]);
+	}, [library.selectedIds, setCollections]);
 
-  const allIcons = useMemo(() => {
-    const core = Object.values(ICON_LIBRARY).flat();
-    const synth = Object.values(synthesizedIcons).flat();
-    return [...core, ...synth];
-  }, [synthesizedIcons]);
+	const handleDeleteCollection = useCallback((id: string) => {
+		setCollections(prev => prev.filter(c => c.id !== id));
+		library.setActiveCollectionId(null);
+	}, [setCollections, library]);
 
-  const activeIcon = useMemo(() => allIcons.find(i => i.id === activeIconId) || null, [activeIconId, allIcons]);
+	// ─── Bulk Selection ───────────────────────────────────────
+	const handleSelectAllFiltered = useCallback(() => {
+		const filteredIds = library.filteredIconsList.map(i => i.id);
+		const allSelected = filteredIds.every(id => library.selectedIds.has(id));
 
-  // AI Semantic Search Effect
-  useEffect(() => {
-    const performSemanticSearch = async () => {
-      if (!settings.aiEnabled || !settings.semanticSearchEnabled || !searchQuery.trim() || searchQuery.length < 3) {
-        setAiSearchResults(null);
-        return;
-      }
+		if (allSelected) {
+			library.setSelectedIds(prev => {
+				const next = new Set(prev);
+				filteredIds.forEach(id => next.delete(id));
+				return next;
+			});
+		} else {
+			library.setSelectedIds(prev => {
+				const next = new Set(prev);
+				filteredIds.forEach(id => next.add(id));
+				return next;
+			});
+		}
+	}, [library]);
 
-      setIsAiSearching(true);
-      try {
-        const result = await withBackoff(async () => {
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-          const iconContext = allIcons.map(i => ({ id: i.id, name: i.name, category: i.category }));
-          return await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: `Given a design system icon library and a user query, return an array of icon IDs that semantically match the user's intent. 
-            User query: "${searchQuery}"
-            Available Icons: ${JSON.stringify(iconContext.slice(0, 300))}`, // Pruned context for speed
-            config: {
-              responseMimeType: 'application/json',
-              responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                  matchedIds: {
-                    type: Type.ARRAY,
-                    items: { type: Type.STRING }
-                  }
-                },
-                required: ['matchedIds']
-              }
-            }
-          });
-        });
+	const isAllFilteredSelected = useMemo(() => {
+		if (library.filteredIconsList.length === 0) return false;
+		return library.filteredIconsList.every(i => library.selectedIds.has(i.id));
+	}, [library.filteredIconsList, library.selectedIds]);
 
-        const data = JSON.parse(result.text || '{"matchedIds": []}');
-        setAiSearchResults(data.matchedIds);
-        setApiError(null);
-      } catch (e: any) {
-        if (e?.message?.includes('429')) {
-          setApiError("Rate limit exceeded. Check your Gemini API quota.");
-        }
-        console.error("Semantic search failed", e);
-      } finally {
-        setIsAiSearching(false);
-      }
-    };
+	const handleClearSelection = useCallback(() => {
+		library.setSelectedIds(new Set());
+	}, [library]);
 
-    const timeout = setTimeout(performSemanticSearch, 800);
-    return () => clearTimeout(timeout);
-  }, [searchQuery, settings.semanticSearchEnabled, settings.aiEnabled, allIcons]);
+	// ─── AI Handlers ──────────────────────────────────────────
+	const handleSetSemanticSearch = useCallback((val: boolean) => {
+		handleUpdateSettings({ semanticSearchEnabled: val });
+	}, [handleUpdateSettings]);
 
-  // AI Related Assets Logic
-  useEffect(() => {
-    const fetchRelated = async () => {
-      if (!settings.aiEnabled || !activeIconId || relatedIconsCache[activeIconId]) return;
-      const currentActive = allIcons.find(i => i.id === activeIconId);
-      if (!currentActive) return;
+	const handleInitializeAi = useCallback((provider: AIProviderId, key: string) => {
+		const newProviders = { ...settings.providers };
+		newProviders[provider] = {
+			...newProviders[provider],
+			apiKey: key,
+			enabled: true,
+			status: 'connected'
+		};
+		handleUpdateSettings({
+			activeProvider: provider,
+			providers: newProviders,
+			aiEnabled: true,
+			hasSeenAiPrompt: true
+		});
+	}, [handleUpdateSettings, settings.providers]);
 
-      try {
-        const result = await withBackoff(async () => {
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-          return await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: `Suggest 4 icon IDs from this library that are visually or conceptually related to "${currentActive.name}".
-            Library: ${JSON.stringify(allIcons.slice(0, 100).map(i => ({ id: i.id, name: i.name })))}
-            Return only the array of IDs.`,
-            config: {
-              responseMimeType: 'application/json',
-              responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                  relatedIds: { type: Type.ARRAY, items: { type: Type.STRING } }
-                },
-                required: ['relatedIds']
-              }
-            }
-          });
-        });
-        const data = JSON.parse(result.text || '{"relatedIds": []}');
-        setRelatedIconsCache(prev => ({ ...prev, [activeIconId]: data.relatedIds }));
-        setApiError(null);
-      } catch (e: any) { 
-        if (e?.message?.includes('429')) setApiError("Rate limit reached.");
-        console.error(e); 
-      }
-    };
-    fetchRelated();
-  }, [activeIconId, relatedIconsCache, settings.aiEnabled, allIcons]);
+	const handleSkipAiPrompt = useCallback(() => {
+		handleUpdateSettings({
+			aiEnabled: false,
+			hasSeenAiPrompt: true
+		});
+	}, [handleUpdateSettings]);
 
-  // AI Metadata Effect
-  useEffect(() => {
-    const generateAiMetadata = async () => {
-      if (!settings.aiEnabled || !activeIconId || aiMetadataCache[activeIconId] || isGeneratingMetadata) return;
-      const currentActive = allIcons.find(i => i.id === activeIconId);
-      if (!currentActive) return;
-      setIsGeneratingMetadata(true);
-      try {
-        const result = await withBackoff(async () => {
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-          return await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: `Provide professional UI design insights for the icon "${currentActive.name}". Generate 4-6 semantic tags and a 1-sentence usage description.`,
-            config: {
-              responseMimeType: 'application/json',
-              responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                  tags: { type: Type.ARRAY, items: { type: Type.STRING } },
-                  description: { type: Type.STRING }
-                },
-                required: ['tags', 'description']
-              }
-            }
-          });
-        });
-        const data = JSON.parse(result.text || '{"tags": [], "description": "No context available."}');
-        setAiMetadataCache(prev => ({ ...prev, [activeIconId]: data }));
-        setApiError(null);
-      } catch (e: any) { 
-        if (e?.message?.includes('429')) setApiError("AI Quota exceeded. Using local defaults.");
-        console.error(e); 
-      }
-      finally { setIsGeneratingMetadata(false); }
-    };
-    generateAiMetadata();
-  }, [activeIconId, aiMetadataCache, isGeneratingMetadata, settings.aiEnabled, allIcons]);
+	const handleResetApp = useCallback(() => {
+		if (confirm('This will clear all collections, selections, and local preferences. Continue?')) {
+			localStorage.clear();
+			window.location.reload();
+		}
+	}, []);
 
-  const handleSynthesizeCategory = async (category: string) => {
-    if (!settings.aiEnabled || synthesizingCategory) return;
-    setSynthesizingCategory(category);
-    try {
-      const result = await withBackoff(async () => {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        return await ai.models.generateContent({
-          model: 'gemini-3-pro-preview', 
-          contents: `Generate 10 new, unique, professional vector icon concepts for the design system category "${category}". 
-          Return a JSON object with a 'newIcons' array. Each icon should have a 'name' (lowercase) and a 'svgPath' (string for <path d="...">) suitable for a 24x24 viewBox.
-          Focus on clean, simple geometric shapes typical of professional icons.`,
-          config: {
-            responseMimeType: 'application/json',
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                newIcons: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      name: { type: Type.STRING },
-                      svgPath: { type: Type.STRING }
-                    },
-                    required: ['name', 'svgPath']
-                  }
-                }
-              },
-              required: ['newIcons']
-            }
-          }
-        });
-      });
-      
-      const data = JSON.parse(result.text || '{"newIcons": []}');
-      const newIconEntries: IconData[] = data.newIcons.map((icon: any, idx: number) => ({
-        id: `gen-${category.toLowerCase()}-${Date.now()}-${idx}`,
-        name: icon.name,
-        category: category,
-        svgPath: icon.svgPath,
-        isSynthesized: true 
-      }));
+	return (
+		<ErrorBoundary>
+			<div className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground transition-colors duration-300 font-sans selection:bg-accent selection:text-accent-foreground">
+				<Header
+					activeTab={activeTab}
+					setActiveTab={setActiveTab}
+					matchCount={library.filteredIconsList.length}
+					totalCount={library.allIcons.length}
+					isSearching={ai.isAiSearching}
+					selectedCount={library.selectedIds.size}
+					onClearSelection={handleClearSelection}
+					onSelectAllFiltered={handleSelectAllFiltered}
+					onCreateCollection={handleCreateCollection}
+					onOpenSettings={() => setShowSettings(true)}
+					aiEnabled={isAiAvailable}
+					isAllFilteredSelected={isAllFilteredSelected}
+					viewMode={library.viewMode}
+					setViewMode={library.setViewMode}
+				/>
 
-      setSynthesizedIcons(prev => ({
-        ...prev,
-        [category]: [...(prev[category] || []), ...newIconEntries]
-      }));
-      setApiError(null);
-    } catch (e: any) {
-      if (e?.message?.includes('429')) setApiError("Synthesis failed: Quota exhausted.");
-      console.error("Synthesis failed", e);
-    } finally {
-      setSynthesizingCategory(null);
-    }
-  };
+				<div className="flex flex-1 overflow-hidden">
+					<ResizablePanelGroup orientation="horizontal">
+						<ResizablePanel defaultSize="20" minSize="15" maxSize="30" className="border-r bg-muted/20">
+							<Sidebar
+								searchQuery={library.searchQuery}
+								setSearchQuery={library.setSearchQuery}
+								viewportSize={viewportSize}
+								setViewportSize={setViewportSize}
+								weighting={weighting}
+								setWeighting={setWeighting}
+								transform={transform}
+								setTransform={setTransform}
+								accentColor={accentColor}
+								setAccentColor={setAccentColor}
+								collections={collections}
+								activeCollectionId={library.activeCollectionId}
+								setActiveCollectionId={library.setActiveCollectionId}
+								onDeleteCollection={handleDeleteCollection}
+								selectedCategory={library.selectedCategory}
+								setSelectedCategory={library.setSelectedCategory}
+								selectedCount={library.selectedIds.size}
+								onExport={library.handleExport}
+								aiEnabled={isAiAvailable}
+								semanticSearchEnabled={settings.semanticSearchEnabled}
+								setSemanticSearchEnabled={handleSetSemanticSearch}
+								isAiSearching={ai.isAiSearching}
+								recentlyViewedIds={library.recentlyViewedIds}
+								allIcons={library.allIcons}
+								onPreview={library.setActiveIconId}
+							/>
+						</ResizablePanel>
 
-  const filteredIconsList = useMemo(() => {
-    if (settings.aiEnabled && settings.semanticSearchEnabled && aiSearchResults !== null && searchQuery.trim()) {
-      return allIcons.filter(icon => aiSearchResults.includes(icon.id));
-    }
-    let result = allIcons;
-    if (activeCollectionId) {
-      const col = collections.find(c => c.id === activeCollectionId);
-      if (col) result = result.filter(icon => col.iconIds.includes(icon.id));
-    } else if (selectedCategory) {
-      result = allIcons.filter(icon => icon.category === selectedCategory);
-    }
-    if (searchQuery.trim() && (!settings.aiEnabled || !settings.semanticSearchEnabled)) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(icon => icon.name.toLowerCase().includes(q) || icon.id.toLowerCase().includes(q));
-    }
-    return result;
-  }, [allIcons, searchQuery, selectedCategory, activeCollectionId, collections, settings.semanticSearchEnabled, aiSearchResults, settings.aiEnabled]);
+						<ResizableHandle withHandle />
 
-  const categoriesToRender = useMemo(() => {
-    const groups: Record<string, IconData[]> = {};
-    const catsToProcess = (activeCollectionId || searchQuery.trim() || selectedCategory) 
-      ? Array.from(new Set(filteredIconsList.map(i => i.category)))
-      : Object.keys(ICON_LIBRARY);
+						<ResizablePanel defaultSize="60" minSize="30">
+							<div className="h-full overflow-y-auto bg-muted/10 p-6">
+								<ErrorBoundary>
+									{activeTab === 'grid' && (
+										<div>
+											{Object.entries(library.categoriesToRender).map(([cat, icons]) => (
+												<IconGrid
+													key={cat}
+													category={cat}
+													icons={icons}
+													viewportSize={viewportSize}
+													weighting={weighting}
+													transform={transform}
+													activeIconId={library.activeIconId}
+													selectedIds={library.selectedIds}
+													settings={settings}
+													aiMetadataCache={ai.aiMetadataCache}
+													customFillColor={customFillColor}
+													onPreview={library.setActiveIconId}
+													onToggle={library.handleToggleSelection}
+													onAddToRecent={library.addToRecent}
+													viewMode={library.viewMode}
+												/>
+											))}
+											{Object.keys(library.categoriesToRender).length === 0 && (
+												<div className="flex h-[400px] flex-col items-center justify-center opacity-20">
+													<svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+													<span className="mt-3 text-sm font-bold uppercase tracking-[0.3em]">No_Results</span>
+												</div>
+											)}
+										</div>
+									)}
+									{activeTab === 'playground' && (
+										<Suspense fallback={<TabLoader />}>
+											<Playground
+												icon={library.activeIcon}
+												weighting={weighting}
+												transform={transform}
+												customFillColor={customFillColor}
+											/>
+										</Suspense>
+									)}
+									{activeTab === 'generator' && (
+										<Suspense fallback={<TabLoader />}>
+											<Generator />
+										</Suspense>
+									)}
+								</ErrorBoundary>
+							</div>
+						</ResizablePanel>
 
-    catsToProcess.forEach(cat => {
-      const icons = filteredIconsList.filter(icon => icon.category === cat);
-      if (icons.length > 0) groups[cat] = icons;
-    });
+						<ResizableHandle withHandle />
 
-    return groups;
-  }, [filteredIconsList, searchQuery, selectedCategory, activeCollectionId]);
+						<ResizablePanel defaultSize="20" minSize="15" maxSize="30" className="border-l bg-background">
+							<div className="h-full overflow-y-auto p-4">
+								<Inspector
+									icon={library.activeIcon}
+									viewportSize={viewportSize}
+									weighting={weighting}
+									transform={transform}
+									customFillColor={customFillColor}
+									relatedIcons={ai.relatedIconsCache[library.activeIconId || ''] || []}
+									aiMetadata={ai.aiMetadataCache[library.activeIconId || ''] || null}
+									isGeneratingMetadata={ai.isGeneratingMetadata}
+									allIcons={library.allIcons}
+									settings={settings}
+									onCopySpec={library.handleCopySpec}
+									onPreview={library.setActiveIconId}
+									onExport={library.handleExportSingle}
+									onAddToRecent={library.addToRecent}
+								/>
+							</div>
+						</ResizablePanel>
+					</ResizablePanelGroup>
+				</div>
 
-  const handleCopySpec = () => {
-    if (!activeIcon) return;
-    const meta = aiMetadataCache[activeIcon.id];
-    const spec = `### ASSET SPECIFICATION: ${activeIcon.name.toUpperCase()}\n\n` +
-      `- **UID:** ${activeIcon.id}\n` +
-      `- **Category:** ${activeIcon.category}\n` +
-      (settings.aiEnabled ? `- **Tags:** ${meta?.tags.join(', ') || 'N/A'}\n` : '') +
-      (settings.aiEnabled ? `- **Usage:** ${meta?.description || 'N/A'}\n\n` : '\n') +
-      `**Batch Transformations Applied:**\n` +
-      `- Rotation: ${transform.rotate}°\n` +
-      `- Scale: ${transform.scale}x\n` +
-      `- Mirroring: ${transform.flipH ? 'Horizontal' : 'None'}, ${transform.flipV ? 'Vertical' : 'None'}\n\n` +
-      `**SVG Path Data:**\n\`\`\`\n${activeIcon.svgPath}\n\`\`\``;
-    
-    navigator.clipboard.writeText(spec);
-    alert("Full specification copied to clipboard in Markdown format.");
-  };
+				<Footer theme={theme} setTheme={setTheme} />
 
-  const handleExportSingle = (icon: IconData) => {
-    const sw = weighting === 'bold' ? 3 : weighting === 'medium' ? 2 : 1.5;
-    const transformStr = `rotate(${transform.rotate} 12 12) scale(${transform.scale}) ${transform.flipH ? 'translate(24 0) scale(-1 1)' : ''} ${transform.flipV ? 'translate(0 24) scale(1 -1)' : ''}`;
-    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="${customFillColor}" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">
-  <g transform="${transformStr}"><path d="${icon.svgPath}" /></g>
-</svg>`;
-    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${icon.name}.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+				<SettingsModal
+					isOpen={showSettings}
+					onClose={() => setShowSettings(false)}
+					settings={settings}
+					updateSettings={handleUpdateSettings}
+					onReset={handleResetApp}
+				/>
 
-  const handleExport = async () => {
-    const itemsToExport = selectedIds.size > 0 
-      ? allIcons.filter(icon => selectedIds.has(icon.id))
-      : allIcons;
-    const zip = new JSZip();
-    const sw = weighting === 'bold' ? 3 : weighting === 'medium' ? 2 : 1.5;
-    
-    itemsToExport.forEach(icon => {
-      const transformStr = `rotate(${transform.rotate} 12 12) scale(${transform.scale}) ${transform.flipH ? 'translate(24 0) scale(-1 1)' : ''} ${transform.flipV ? 'translate(0 24) scale(1 -1)' : ''}`;
-      const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="${customFillColor}" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">
-  <g transform="${transformStr}"><path d="${icon.svgPath}" /></g>
-</svg>`;
-      zip.file(`${settings.autoExportFolders ? icon.category + '/' : ''}${icon.name}.svg`, svgContent);
-    });
-    const blob = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `core_ui_export_${itemsToExport.length}_assets.zip`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+				{showAiPrompt && (
+					<AiKeyPrompt
+						onSave={handleInitializeAi}
+						onSkip={handleSkipAiPrompt}
+					/>
+				)}
 
-  return (
-    <div className={`flex h-screen bg-[#f1f3f6] dark:bg-[#0a0a0a] text-[#1a1a1a] dark:text-[#e0e0e0] overflow-hidden transition-colors duration-300 ${settings.uiDensity === 'compact' ? 'density-compact' : ''}`}>
-      <Sidebar 
-        viewportSize={viewportSize} setViewportSize={setViewportSize}
-        weighting={weighting} setWeighting={setWeighting}
-        searchQuery={searchQuery} setSearchQuery={setSearchQuery}
-        selectedCategory={selectedCategory} setSelectedCategory={(c) => { setSelectedCategory(c); setActiveCollectionId(null); }}
-        collections={collections} activeCollectionId={activeCollectionId}
-        setActiveCollectionId={(id) => { setActiveCollectionId(id); setSelectedCategory(null); }}
-        onDeleteCollection={(id) => setCollections(prev => prev.filter(c => c.id !== id))}
-        accentColor={accentColor} setAccentColor={setAccentColor}
-        selectedCount={selectedIds.size} onExport={handleExport}
-        aiEnabled={settings.aiEnabled}
-        semanticSearchEnabled={settings.semanticSearchEnabled} setSemanticSearchEnabled={(v) => handleUpdateSettings({ semanticSearchEnabled: v })}
-        isAiSearching={isAiSearching}
-        transform={transform} setTransform={setTransform}
-      />
-
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
-        <Header 
-          activeTab={activeTab} setActiveTab={setActiveTab} 
-          matchCount={filteredIconsList.length} totalCount={allIcons.length}
-          isSearching={searchQuery.trim() !== ''} selectedCount={selectedIds.size}
-          onClearSelection={() => setSelectedIds(new Set())}
-          onSelectAllFiltered={() => setSelectedIds(new Set(filteredIconsList.map(i => i.id)))}
-          onCreateCollection={() => {
-            const name = prompt("Name:");
-            if (name) setCollections(prev => [...prev, { id: `c-${Date.now()}`, name, iconIds: Array.from(selectedIds), createdAt: Date.now() }]);
-          }}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          aiEnabled={settings.aiEnabled}
-        />
-
-        {apiError && (
-          <div className="bg-red-500 text-white text-[10px] font-black uppercase tracking-widest py-2 px-8 flex justify-between items-center z-[100] animate-in slide-in-from-top-full duration-300">
-            <span>Alert: {apiError}</span>
-            <div className="flex gap-4">
-              <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="underline">Check Quota</a>
-              <button onClick={() => setApiError(null)}>Dismiss</button>
-            </div>
-          </div>
-        )}
-
-        <div className="flex-1 flex overflow-hidden w-full relative">
-          <main className="flex-1 overflow-y-auto blueprint-grid relative" style={{ backgroundImage: settings.showGrid ? undefined : 'none', '--grid-opacity': settings.gridOpacity } as any}>
-            <div className={`w-full max-w-[1400px] mx-auto ${settings.uiDensity === 'compact' ? 'p-6' : 'p-10'}`}>
-              {activeTab === 'grid' && (
-                Object.entries(categoriesToRender).map(([cat, icons], idx) => (
-                  <IconGrid 
-                    key={cat} title={cat} index={(idx+1).toString().padStart(2, '0')}
-                    items={icons} itemCount={icons.length.toString()}
-                    activeId={activeIconId} selectedIds={selectedIds}
-                    onPreview={setActiveIconId} onToggle={(id) => setSelectedIds(prev => {
-                      const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
-                    })}
-                    weighting={weighting} viewportSize={viewportSize}
-                    aiMatchedIds={(settings.aiEnabled && settings.semanticSearchEnabled) ? aiSearchResults : null}
-                    transform={transform}
-                    aiEnabled={settings.aiEnabled}
-                    isSynthesizing={synthesizingCategory === cat}
-                    onSynthesize={() => handleSynthesizeCategory(cat)}
-                    namingValidationEnabled={settings.namingValidationEnabled}
-                  />
-                ))
-              )}
-
-              {activeTab === 'playground' && <Playground icon={activeIcon} transform={transform} weighting={weighting} />}
-              {activeTab === 'generator' && settings.aiEnabled && <Generator />}
-            </div>
-          </main>
-
-          <Inspector 
-            icon={activeIcon} 
-            allIcons={allIcons}
-            viewportSize={viewportSize} 
-            weighting={weighting} setWeighting={setWeighting}
-            isOpen={isInspectorOpen} onToggle={() => setIsInspectorOpen(!isInspectorOpen)}
-            customFillColor={customFillColor} setCustomFillColor={setCustomFillColor}
-            aiEnabled={settings.aiEnabled}
-            aiMetadata={activeIconId ? aiMetadataCache[activeIconId] : null}
-            isGeneratingMetadata={isGeneratingMetadata}
-            relatedIconIds={activeIconId ? relatedIconsCache[activeIconId] : []}
-            onSelectIcon={setActiveIconId}
-            onCopySpec={handleCopySpec}
-            onExportSingle={handleExportSingle}
-            transform={transform}
-          />
-        </div>
-        <Footer theme={theme} setTheme={setTheme} />
-      </div>
-
-      <SettingsModal 
-        isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)}
-        settings={settings} updateSettings={handleUpdateSettings}
-        onReset={() => { localStorage.clear(); window.location.reload(); }}
-      />
-    </div>
-  );
+				{ai.apiError && (
+					<div className="fixed bottom-16 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-md bg-destructive px-4 py-2 text-destructive-foreground shadow-lg">
+						<span className="text-xs font-bold uppercase tracking-widest">{ai.apiError}</span>
+						<button
+							onClick={() => ai.setApiError(null)}
+							className="opacity-70 hover:opacity-100"
+						>
+							✕
+						</button>
+					</div>
+				)}
+			</div>
+		</ErrorBoundary>
+	);
 };
 
 export default App;

@@ -1,167 +1,173 @@
 
 import React from 'react';
-import { IconData, ViewportSize, IconTransform } from '../types';
+import { IconData, ViewportSize, Weighting, IconTransform, IconAiMetadata, ViewMode } from '../types';
+import { getStrokeWidth, getTransformStyle } from '../utils/svg';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface IconGridProps {
-  title: string;
-  index: string;
-  items: IconData[];
-  itemCount: string;
-  activeId: string | null;
-  selectedIds: Set<string>;
-  onPreview: (id: string) => void;
-  onToggle: (id: string) => void;
-  weighting: string;
+  category: string;
+  icons: IconData[];
   viewportSize: ViewportSize;
-  aiMatchedIds?: string[] | null;
+  weighting: Weighting;
   transform: IconTransform;
-  aiEnabled?: boolean;
-  isSynthesizing?: boolean;
-  onSynthesize?: () => void;
-  namingValidationEnabled?: boolean;
+  activeIconId: string | null;
+  selectedIds: Set<string>;
+  settings: { gridOpacity: number; showGrid: boolean; aiEnabled: boolean };
+  aiMetadataCache: Record<string, IconAiMetadata>;
+  customFillColor: string;
+  viewMode: ViewMode;
+  onPreview: (id: string | null) => void;
+  onToggle: (id: string) => void;
+  onAddToRecent: (id: string) => void;
 }
 
 const IconGrid: React.FC<IconGridProps> = ({
-  title,
-  index,
-  items,
-  itemCount,
-  activeId,
-  selectedIds,
-  onPreview,
-  onToggle,
-  weighting,
-  viewportSize,
-  aiMatchedIds,
-  transform,
-  aiEnabled,
-  isSynthesizing,
-  onSynthesize,
-  namingValidationEnabled
+  category, icons, viewportSize, weighting, transform, activeIconId, selectedIds,
+  settings, aiMetadataCache, customFillColor, viewMode, onPreview, onToggle, onAddToRecent
 }) => {
-  const getStrokeWidth = () => {
-    switch(weighting) {
-      case 'medium': return 2;
-      case 'bold': return 3;
-      default: return 1.5;
-    }
-  };
+  const sw = getStrokeWidth(weighting);
+  const transformStyle = getTransformStyle(transform);
 
-  const getTransformStyle = () => {
-    return {
-      transform: `rotate(${transform.rotate}deg) scale(${transform.scale}) ${transform.flipH ? 'scaleX(-1)' : ''} ${transform.flipV ? 'scaleY(-1)' : ''}`
-    };
-  };
-
-  const isValidName = (name: string) => /^[a-z0-9]+([_-][a-z0-9]+)*$/.test(name);
+  // Responsive grid sizing handled by Tailwind grid classes or inline style if dynamic
+  const gridMinSize = viewportSize === 32 ? '60px' : viewportSize === 16 ? '40px' : '52px';
 
   return (
-    <section className="mb-20" role="region" aria-labelledby={`grid-header-${index}`}>
-      <div className="flex items-center justify-between border-b-2 border-black/15 dark:border-white/10 pb-4 mb-8 transition-colors duration-300">
-        <h2 id={`grid-header-${index}`} className="text-[13px] font-black text-black dark:text-white uppercase tracking-[0.3em] flex items-center gap-4 transition-colors">
-          <span className="text-black/40 dark:text-white/30 font-mono text-[11px] transition-colors" aria-hidden="true">{index}</span>
-          {title}
-          {aiEnabled && onSynthesize && (
-            <button 
-              onClick={onSynthesize}
-              disabled={isSynthesizing}
-              aria-busy={isSynthesizing}
-              className={`ml-4 px-2 py-1 rounded border text-[8px] font-black uppercase tracking-widest transition-all focus-visible:ring-2 focus-visible:ring-accent ${isSynthesizing ? 'bg-accent/10 border-accent text-accent animate-pulse' : 'bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 opacity-30 hover:opacity-100 hover:border-accent hover:text-accent'}`}
-            >
-              {isSynthesizing ? 'Synthesizing...' : 'Synthesize_Expansion'}
-            </button>
-          )}
-        </h2>
-        <div className="flex items-center gap-6">
-          <span className="text-[10px] font-mono px-2.5 py-1 bg-black/5 dark:bg-white/5 border border-black/20 dark:border-white/10 text-black/70 dark:text-white/50 uppercase tracking-tighter rounded-sm shadow-sm" aria-label={`Native size ${viewportSize} pixels`}>
-            Native_{viewportSize}px
+    <div className="mb-8">
+      <div className="mb-4 flex items-center justify-between border-b pb-2">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              const allInCatSelected = icons.every(i => selectedIds.has(i.id));
+              icons.forEach(i => {
+                if (allInCatSelected) {
+                  if (selectedIds.has(i.id)) onToggle(i.id);
+                } else {
+                  if (!selectedIds.has(i.id)) onToggle(i.id);
+                }
+              });
+            }}
+            className={cn(
+              "flex h-4 w-4 items-center justify-center rounded border transition-colors",
+              icons.every(i => selectedIds.has(i.id))
+                ? "bg-primary border-primary text-primary-foreground"
+                : "border-muted-foreground/30 hover:border-primary"
+            )}
+          >
+            {icons.every(i => selectedIds.has(i.id)) && <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+          </button>
+          <span className="text-xs font-bold uppercase tracking-[0.4em] text-primary">
+            {category}
           </span>
-          <span className="text-[10px] font-mono text-black/50 dark:text-white/30 uppercase tracking-widest transition-colors font-bold" aria-label={`${itemCount} total items in this set`}>SET_{index} // {itemCount}</span>
+          <div className="h-px w-24 bg-gradient-to-r from-primary/40 to-transparent" />
+          <span className="font-mono text-[10px] opacity-30">{icons.length} units</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 border-l border-t border-black/15 dark:border-white/10 transition-colors bg-white/30 dark:bg-transparent backdrop-blur-sm rounded-sm overflow-hidden shadow-sm">
-        {items.map((icon) => {
-          const isAiMatched = aiMatchedIds?.includes(icon.id);
-          const isSynth = (icon as any).isSynthesized;
-          const isSelected = selectedIds.has(icon.id);
-          const nameMismatched = namingValidationEnabled && !isValidName(icon.name);
-          
-          return (
-            <div
-              key={icon.id}
-              className={`
-                relative aspect-square flex flex-col items-center justify-center border-r border-b border-black/15 dark:border-white/10 cursor-pointer group transition-all duration-200
-                ${activeId === icon.id ? 'z-10 bg-accent/[0.03] ring-1 ring-inset ring-accent/30 shadow-inner' : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'}
-                ${isAiMatched ? 'bg-accent/[0.05]' : ''}
-                ${isSynth ? 'bg-accent/[0.01]' : ''}
-                ${nameMismatched ? 'ring-inset ring-1 ring-red-500/20' : ''}
-              `}
-              onClick={() => onPreview(icon.id)}
-              role="button"
-              tabIndex={0}
-              aria-label={`Preview ${icon.name} icon`}
-              aria-selected={activeId === icon.id}
-              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onPreview(icon.id)}
-            >
-              {/* Markers */}
-              {isAiMatched && <div className="absolute inset-0 bg-accent/5 animate-pulse pointer-events-none" aria-hidden="true"></div>}
-              {isSynth && <div className="absolute top-1 right-1 w-1.5 h-1.5 border border-accent rounded-full opacity-40" aria-hidden="true"></div>}
+      <div
+        className={cn(
+          "grid gap-2",
+          viewMode === 'grid'
+            ? ""
+            : "grid-cols-1"
+        )}
+        style={viewMode === 'grid' ? { gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinSize}, 1fr))` } : {}}
+      >
+        <TooltipProvider>
+          {icons.map(icon => {
+            const isActive = icon.id === activeIconId;
+            const isSelected = selectedIds.has(icon.id);
+            // const meta = settings.aiEnabled ? aiMetadataCache[icon.id] : null;
 
-              {/* Naming Warning Indicator */}
-              {nameMismatched && (
-                <div 
-                  className="absolute bottom-1 left-1 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_4px_rgba(239,68,68,0.5)]" 
-                  title="Naming convention mismatch: expected snake_case or kebab-case"
-                  aria-hidden="true"
-                />
-              )}
+            return (
+              <Tooltip key={icon.id}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      onPreview(icon.id);
+                      onToggle(icon.id);
+                      onAddToRecent(icon.id);
+                    }}
+                    className={cn(
+                      "relative flex items-center rounded-md border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      viewMode === 'grid' ? "aspect-square justify-center" : "h-12 px-4 gap-4",
+                      isActive
+                        ? "z-10 scale-[1.02] border-primary bg-accent shadow-md"
+                        : isSelected
+                          ? "border-primary/50 bg-secondary"
+                          : "border-border bg-card hover:z-10 hover:border-primary/50 hover:bg-accent hover:shadow-sm"
+                    )}
+                  >
+                    <div className={cn(
+                      "relative flex items-center justify-center",
+                      viewMode === 'grid' ? "" : "h-8 w-8 shrink-0"
+                    )}>
+                      {settings.showGrid && viewMode === 'grid' && (
+                        <div className="absolute inset-0 overflow-hidden opacity-[var(--grid-opacity)]" style={{ '--grid-opacity': settings.gridOpacity } as any}>
+                          <svg width="100%" height="100%" className="text-primary/20">
+                            <pattern id={`grid-${icon.id}`} width="50%" height="50%" patternUnits="userSpaceOnUse">
+                              <line x1="50%" y1="0" x2="50%" y2="100%" stroke="currentColor" strokeWidth="0.5" strokeDasharray="1 1" />
+                              <line x1="0" y1="50%" x2="100%" y2="50%" stroke="currentColor" strokeWidth="0.5" strokeDasharray="1 1" />
+                            </pattern>
+                            <rect width="100%" height="100%" fill={`url(#grid-${icon.id})`} />
+                          </svg>
+                        </div>
+                      )}
 
-              {/* Multi-Selection */}
-              <button 
-                onClick={(e) => { e.stopPropagation(); onToggle(icon.id); }}
-                className={`absolute top-3 left-3 w-4 h-4 border rounded-sm transition-all flex items-center justify-center z-20 focus-visible:ring-2 focus-visible:ring-accent ${isSelected ? 'bg-accent border-accent scale-110 shadow-sm' : 'border-black/20 dark:border-white/20 bg-white/50 dark:bg-black/50 opacity-40 group-hover:opacity-100 hover:border-accent'}`}
-                aria-label={`${isSelected ? 'Deselect' : 'Select'} ${icon.name} for export`}
-                aria-pressed={isSelected}
-              >
-                {isSelected && (
-                  <svg className="w-2.5 h-2.5 text-white dark:text-black" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                  </svg>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill={customFillColor === 'currentColor' ? 'none' : (customFillColor === 'none' ? 'none' : customFillColor)}
+                        stroke="currentColor"
+                        strokeWidth={sw}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        width={viewportSize === 32 ? '32' : viewportSize === 16 ? '16' : '24'}
+                        height={viewportSize === 32 ? '32' : viewportSize === 16 ? '16' : '24'}
+                        style={{ ...transformStyle, transition: 'transform 0.3s ease' }}
+                      >
+                        <path d={icon.svgPath} />
+                      </svg>
+                    </div>
+
+                    {viewMode === 'list' && (
+                      <div className="flex flex-1 flex-col items-start overflow-hidden text-left">
+                        <span className="truncate font-mono text-[11px] font-bold uppercase tracking-tight">{icon.name}</span>
+                        <span className="truncate text-[9px] opacity-40 uppercase tracking-widest">{icon.category}</span>
+                      </div>
+                    )}
+
+                    {viewMode === 'list' && isSelected && (
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                      </div>
+                    )}
+
+                    {viewMode === 'grid' && isSelected && (
+                      <div className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm ring-2 ring-background">
+                        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                      </div>
+                    )}
+
+                    {icon.isSynthesized && (
+                      <div className={cn(
+                        "rounded-full bg-purple-500",
+                        viewMode === 'grid' ? "absolute bottom-1 right-1 h-1 w-1" : "h-1.5 w-1.5"
+                      )} />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                {viewMode === 'grid' && (
+                  <TooltipContent side="bottom" className="text-[10px] font-bold uppercase tracking-wider">
+                    {icon.name}
+                  </TooltipContent>
                 )}
-              </button>
-
-              {/* Active Marker */}
-              {activeId === icon.id && <div className="absolute top-3 right-3 w-1.5 h-1.5 bg-accent rounded-full shadow-[0_0_8px_var(--system-accent)]" aria-hidden="true"></div>}
-
-              {/* Icon */}
-              <div className="flex items-center justify-center mb-5" style={{ width: '56px', height: '56px' }} aria-hidden="true">
-                <svg 
-                  style={{ width: `${viewportSize}px`, height: `${viewportSize}px`, ...getTransformStyle() }}
-                  className={`transition-all group-hover:scale-110 ${activeId === icon.id ? 'text-accent drop-shadow-[0_0_2px_rgba(0,0,0,0.1)]' : 'text-black/70 dark:text-white/60 group-hover:text-black dark:group-hover:text-white'}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth={getStrokeWidth()}
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  viewBox="0 0 24 24"
-                >
-                  <path d={icon.svgPath} />
-                </svg>
-              </div>
-
-              {/* Label */}
-              <span className={`text-[9px] font-black uppercase tracking-[0.2em] transition-colors truncate px-2 w-full text-center ${activeId === icon.id ? 'text-accent opacity-100' : 'text-black/50 dark:text-white/30 group-hover:text-black/80 dark:group-hover:text-white/60'}`} aria-hidden="true">
-                {icon.name}
-              </span>
-              
-              {isSynth && <span className="absolute bottom-1 right-2 text-[6px] font-black text-accent/40 uppercase tracking-tighter">SYNTH_ASSET</span>}
-            </div>
-          );
-        })}
+              </Tooltip>
+            );
+          })}
+        </TooltipProvider>
       </div>
-    </section>
+    </div>
   );
 };
 
-export default IconGrid;
+export default React.memo(IconGrid);
