@@ -8,7 +8,7 @@ import { useAI } from './hooks/useAI';
 import { useIconLibrary } from './hooks/useIconLibrary';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { useAccessibility } from './hooks/useAccessibility';
-import { useAutoSave, useRecoveryCheck, getCustomIcons, saveCustomIcon, deleteCustomIcon } from './hooks/useAutoSave';
+import { useAutoSave, useRecoveryCheck, getCustomIcons, saveCustomIcon, deleteCustomIcon, getAnnotations } from './hooks/useAutoSave';
 import { useAdvancedSearch, applyFilters as applyAdvancedFilters, calculateFilterStats } from './hooks/useAdvancedSearch';
 
 // Mobile detection hook
@@ -144,6 +144,27 @@ const App: React.FC = () => {
 		await deleteCustomIcon(id);
 		setCustomIcons(prev => prev.filter(i => i.id !== id));
 	}, []);
+
+	// ─── Annotations State ─────────────────────────────────────
+	const [annotatedIconIds, setAnnotatedIconIds] = useState<Set<string>>(new Set());
+
+	const loadAnnotations = useCallback(async () => {
+		const annotations = await getAnnotations();
+		setAnnotatedIconIds(new Set(annotations.map(a => a.id)));
+	}, []);
+
+	useEffect(() => {
+		loadAnnotations();
+	}, [loadAnnotations]);
+
+	// Listen for custom event from IconAnnotations component to trigger reload
+	useEffect(() => {
+		const handleAnnotationUpdated = () => {
+			loadAnnotations();
+		};
+		window.addEventListener('icon-annotation-updated', handleAnnotationUpdated);
+		return () => window.removeEventListener('icon-annotation-updated', handleAnnotationUpdated);
+	}, [loadAnnotations]);
 
 	// ─── Icon Library ─────────────────────────────────────────
 	const library = useIconLibrary({
@@ -630,6 +651,7 @@ const App: React.FC = () => {
 													settings={settings}
 													aiMetadataCache={ai.aiMetadataCache}
 													customFillColor={customFillColor}
+													annotatedIconIds={annotatedIconIds}
 													onPreview={library.setActiveIconId}
 													onToggle={library.handleToggleSelection}
 													onAddToRecent={library.addToRecent}

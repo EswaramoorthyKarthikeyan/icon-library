@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import VariantSwitcher from './VariantSwitcher';
+import IconAnnotations from './IconAnnotations';
 
 interface InspectorProps {
   icon: IconData | null;
@@ -244,6 +245,9 @@ const Inspector: React.FC<InspectorProps> = ({
           </TooltipProvider>
         </div>
       </div>
+
+      {/* Annotations */}
+      <IconAnnotations iconId={icon.id} />
 
       {/* Actions */}
       <div className="mt-auto pt-4 flex flex-col gap-2 w-full">

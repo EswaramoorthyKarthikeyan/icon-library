@@ -30,6 +30,7 @@ interface RecoveryData {
 const DB_NAME = 'icon-library-db';
 const STORE_NAME = 'drafts';
 const CUSTOM_ICONS_STORE = 'custom_icons';
+const ANNOTATIONS_STORE = 'annotations';
 const RECOVERY_KEY = 'app-recovery';
 
 /**
@@ -37,7 +38,7 @@ const RECOVERY_KEY = 'app-recovery';
  */
 async function initDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 2);
+    const request = indexedDB.open(DB_NAME, 3); // Incremented version to 3
 
     request.onerror = () => {
       console.error('IndexedDB open error:', request.error);
@@ -58,6 +59,10 @@ async function initDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(CUSTOM_ICONS_STORE)) {
         console.log('Creating store:', CUSTOM_ICONS_STORE);
         db.createObjectStore(CUSTOM_ICONS_STORE, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(ANNOTATIONS_STORE)) {
+        console.log('Creating store:', ANNOTATIONS_STORE);
+        db.createObjectStore(ANNOTATIONS_STORE, { keyPath: 'id' });
       }
     };
   });
@@ -415,5 +420,56 @@ export async function deleteCustomIcon(id: string): Promise<void> {
     });
   } catch (error) {
     console.error('Failed to delete custom icon:', error);
+  }
+}
+
+// --- Annotations Store Exporters ---
+
+export interface IconAnnotation {
+  id: string; // The Icon ID
+  text: string;
+  updatedAt: number;
+}
+
+export async function getAnnotations(): Promise<IconAnnotation[]> {
+  try {
+    const db = await initDB();
+    const transaction = db.transaction([ANNOTATIONS_STORE], 'readonly');
+    const store = transaction.objectStore(ANNOTATIONS_STORE);
+    return new Promise((resolve, reject) => {
+       const request = store.getAll();
+       request.onerror = () => reject(request.error);
+       request.onsuccess = () => resolve(request.result || []);
+    });
+  } catch (error) {
+    console.error('Failed to get annotations:', error);
+    return [];
+  }
+}
+
+export async function saveAnnotation(id: string, text: string): Promise<void> {
+  try {
+    const db = await initDB();
+    const transaction = db.transaction([ANNOTATIONS_STORE], 'readwrite');
+    const store = transaction.objectStore(ANNOTATIONS_STORE);
+    
+    if (!text.trim()) {
+       // Delete if empty
+       await new Promise((resolve, reject) => {
+           const request = store.delete(id);
+           request.onerror = () => reject(request.error);
+           request.onsuccess = () => resolve(request.result);
+       });
+       return;
+    }
+
+    const annotation: IconAnnotation = { id, text, updatedAt: Date.now() };
+    await new Promise((resolve, reject) => {
+      const request = store.put(annotation);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+  } catch (error) {
+    console.error('Failed to save annotation:', error);
   }
 }

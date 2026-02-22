@@ -17,6 +17,7 @@ interface IconGridProps {
   settings: { gridOpacity: number; showGrid: boolean; aiEnabled: boolean };
   aiMetadataCache: Record<string, IconAiMetadata>;
   customFillColor: string;
+  annotatedIconIds?: Set<string>;
   viewMode: ViewMode;
   onPreview: (id: string | null) => void;
   onToggle: (id: string) => void;
@@ -25,7 +26,7 @@ interface IconGridProps {
 
 const IconGrid: React.FC<IconGridProps> = ({
   category, icons, viewportSize, weighting, transform, activeIconId, selectedIds,
-  settings, aiMetadataCache, customFillColor, viewMode, onPreview, onToggle, onAddToRecent
+  settings, aiMetadataCache, customFillColor, annotatedIconIds = new Set(), viewMode, onPreview, onToggle, onAddToRecent
 }) => {
   const sw = getStrokeWidth(weighting);
   const transformStyle = getTransformStyle(transform);
@@ -114,6 +115,7 @@ const IconGrid: React.FC<IconGridProps> = ({
           {icons.map(icon => {
             const isActive = icon.id === activeIconId;
             const isSelected = selectedIds.has(icon.id);
+            const hasNote = annotatedIconIds.has(icon.id);
             // const meta = settings.aiEnabled ? aiMetadataCache[icon.id] : null;
 
             return (
@@ -194,6 +196,10 @@ const IconGrid: React.FC<IconGridProps> = ({
                       <div className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm ring-2 ring-background">
                         <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
                       </div>
+                    )}
+
+                    {hasNote && (
+                      <div className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-amber-400 shadow-sm" title="Has design notes" />
                     )}
 
                     {icon.isSynthesized && (
