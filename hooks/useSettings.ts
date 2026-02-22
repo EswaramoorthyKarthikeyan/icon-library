@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
     AppSettings,
     AppTheme,
@@ -6,7 +6,9 @@ import {
     IconTransform,
     ViewportSize,
     Weighting,
+    VisualState,
 } from "../types";
+import { useHistory } from "./useHistory";
 
 const DEFAULT_SETTINGS: AppSettings = {
     showGrid: true,
@@ -68,21 +70,55 @@ const DEFAULT_TRANSFORM: IconTransform = {
  * and collection persistence via localStorage.
  */
 export const useSettings = () => {
-    // UI preferences
-    const [viewportSize, setViewportSize] = useState<ViewportSize>(24);
-    const [weighting, setWeighting] = useState<Weighting>("regular");
-    const [theme, setTheme] = useState<AppTheme>(() => {
-        const saved = localStorage.getItem("core_ui_theme");
-        return (saved as AppTheme) || "system";
-    });
-    const [accentColor, setAccentColor] = useState<string>("");
-    const [customFillColor, setCustomFillColor] = useState<string>("none");
-    const [transform, setTransform] = useState<IconTransform>(DEFAULT_TRANSFORM);
+    // Initial visual state
+    const initialVisualState: VisualState = useMemo(() => ({
+        viewportSize: 24,
+        weighting: "regular",
+        theme: (localStorage.getItem("core_ui_theme") as AppTheme) || "system",
+        accentColor: "",
+        customFillColor: "none",
+        transform: DEFAULT_TRANSFORM,
+    }), []);
+
+    // History-managed visual state
+    const { 
+        state: vs, 
+        push: pushHistory, 
+        undo, 
+        redo, 
+        canUndo, 
+        canRedo 
+    } = useHistory<VisualState>(initialVisualState);
+
+    // Compatibility setters that push to history
+    const setViewportSize = useCallback((size: ViewportSize) => {
+        pushHistory({ ...vs, viewportSize: size });
+    }, [vs, pushHistory]);
+
+    const setWeighting = useCallback((w: Weighting) => {
+        pushHistory({ ...vs, weighting: w });
+    }, [vs, pushHistory]);
+
+    const setTheme = useCallback((t: AppTheme) => {
+        pushHistory({ ...vs, theme: t });
+    }, [vs, pushHistory]);
+
+    const setAccentColor = useCallback((color: string) => {
+        pushHistory({ ...vs, accentColor: color });
+    }, [vs, pushHistory]);
+
+    const setCustomFillColor = useCallback((color: string) => {
+        pushHistory({ ...vs, customFillColor: color });
+    }, [vs, pushHistory]);
+
+    const setTransform = useCallback((t: IconTransform) => {
+        pushHistory({ ...vs, transform: t });
+    }, [vs, pushHistory]);
 
     // Save theme to localStorage
     useEffect(() => {
-        localStorage.setItem("core_ui_theme", theme);
-    }, [theme]);
+        localStorage.setItem("core_ui_theme", vs.theme);
+    }, [vs.theme]);
 
     // App settings (persisted in localStorage)
     const [settings, setSettings] = useState<AppSettings>(() => {
@@ -144,7 +180,7 @@ export const useSettings = () => {
 
             // Set Primary Color / Accent
             const defaultBlue = actualTheme === "dark" ? "#60a5fa" : "#2563eb";
-            const primaryHex = accentColor || defaultBlue;
+            const primaryHex = vs.accentColor || defaultBlue;
 
             // Helper to convert hex to HSL for shadcn variables
             const hexToHsl = (hex: string) => {
@@ -190,31 +226,37 @@ export const useSettings = () => {
             }
         };
 
-        applyTheme(theme);
+        applyTheme(vs.theme);
 
         // Listen for system theme changes if in system mode
-        if (theme === "system") {
+        if (vs.theme === "system") {
             const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
             const handleChange = () => applyTheme("system");
             mediaQuery.addEventListener("change", handleChange);
             return () => mediaQuery.removeEventListener("change", handleChange);
         }
-    }, [theme, accentColor]);
+    }, [vs.theme, vs.accentColor]);
 
     return {
         // Visual preferences
-        viewportSize,
+        viewportSize: vs.viewportSize,
         setViewportSize,
-        weighting,
+        weighting: vs.weighting,
         setWeighting,
-        theme,
+        theme: vs.theme,
         setTheme,
-        accentColor,
+        accentColor: vs.accentColor,
         setAccentColor,
-        customFillColor,
+        customFillColor: vs.customFillColor,
         setCustomFillColor,
-        transform,
+        transform: vs.transform,
         setTransform,
+
+        // History
+        undo,
+        redo,
+        canUndo,
+        canRedo,
 
         // App settings
         settings,

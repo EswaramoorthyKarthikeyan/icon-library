@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { SearchIcon, Repeat, Eye, PanelsTopLeft, Package, Sparkles, Trash, Clock } from 'lucide-react';
+import { SearchIcon, Repeat, Eye, PanelsTopLeft, Package, Sparkles, Trash, Clock, Filter, Upload } from 'lucide-react';
 import { ViewportSize, Weighting, Collection, IconTransform, IconData } from '../types.ts';
 import { ICON_LIBRARY } from '../constants.tsx';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import ImportZone from './ImportZone';
 
 interface SidebarProps {
   viewportSize: ViewportSize;
@@ -34,6 +35,10 @@ interface SidebarProps {
   recentlyViewedIds: string[];
   allIcons: IconData[];
   onPreview: (id: string) => void;
+  isMobile?: boolean;
+  searchInputRef?: React.RefObject<HTMLInputElement>;
+  onOpenFilters?: () => void;
+  onImportSvg?: (icon: IconData) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -41,13 +46,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   selectedCategory, setSelectedCategory, collections, activeCollectionId, setActiveCollectionId,
   onDeleteCollection, accentColor, setAccentColor, selectedCount, onExport,
   aiEnabled, semanticSearchEnabled, setSemanticSearchEnabled, isAiSearching, transform, setTransform,
-  recentlyViewedIds, allIcons, onPreview, searchHistory, onSelectHistory
+  recentlyViewedIds, allIcons, onPreview, isMobile = false, searchInputRef, onOpenFilters,
+  onImportSvg
 }) => {
   const [exportFormat, setExportFormat] = React.useState<'svg' | 'jsx' | 'json'>('svg');
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-muted/20">
-      <ScrollArea className="flex-1 p-4">
+    <div className={`flex ${isMobile ? 'flex-col max-h-full' : 'h-full flex-col'} overflow-hidden bg-muted/20`}>
+      <ScrollArea className={`flex-1 ${isMobile ? 'p-2' : 'p-4'}`}>
         {/* Branding */}
         <div className="mb-6">
           <div className="mb-1 flex items-center gap-2">
@@ -61,41 +67,41 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="mb-6 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-[0.1em] opacity-50">Search_Registry</span>
-            {aiEnabled && (
+            <div className="flex items-center gap-1">
+              {aiEnabled && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`h-5 px-2 text-[8px] font-bold uppercase transition-all ${semanticSearchEnabled ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}
+                  onClick={() => setSemanticSearchEnabled(!semanticSearchEnabled)}
+                  aria-label="Toggle AI semantic search"
+                >
+                  {isAiSearching ? 'Analysing...' : 'AI Semantic'}
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
-                className={`h-5 px-2 text-[8px] font-bold uppercase transition-all ${semanticSearchEnabled ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}
-                onClick={() => setSemanticSearchEnabled(!semanticSearchEnabled)}
+                className="h-5 px-2 text-[8px] font-bold uppercase transition-all text-muted-foreground hover:bg-muted/50"
+                onClick={() => onOpenFilters?.()}
+                aria-label="Advanced filters"
+                title="Advanced filters (categories, sizes, colors, etc.)"
               >
-                {isAiSearching ? 'Analysing...' : 'AI Semantic'}
+                <Filter className="h-3 w-3" />
               </Button>
-            )}
+            </div>
           </div>
         </div>
         <div className="relative">
           <SearchIcon className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground/70" />
           <Input
+            ref={searchInputRef}
             placeholder={aiEnabled && semanticSearchEnabled ? "Concept search..." : "Search ID..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="h-9 border-muted-foreground/20 pl-8 font-mono text-[11px] placeholder:text-muted-foreground/40 focus-visible:ring-primary/20"
           />
         </div>
-
-        {searchHistory?.length > 0 && !searchQuery && (
-          <div className="flex flex-wrap gap-1.5 px-0.5">
-            {searchHistory?.slice(0, 5).map(hist => (
-              <button
-                key={hist}
-                onClick={() => onSelectHistory(hist)}
-                className="rounded-[3px] bg-background/50 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-muted-foreground border border-transparent hover:border-primary/20 hover:text-foreground transition-all"
-              >
-                {hist}
-              </button>
-            ))}
-          </div>
-        )}
 
 
         {/* Appearance Config */}
@@ -107,6 +113,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   key={size}
                   onClick={() => setViewportSize(size as ViewportSize)}
+                  aria-label={`Set viewport size to ${size} pixels`}
+                  area-pressed={viewportSize === size}
                   className={`flex-1 rounded-[4px] py-1.5 text-[10px] font-bold transition-all ${viewportSize === size
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-muted-foreground hover:bg-muted'
@@ -125,6 +133,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   key={w}
                   onClick={() => setWeighting(w)}
+                  aria-label={`Set stroke weight to ${w}`}
+                  aria-pressed={weighting === w}
                   className={`flex-1 rounded-[4px] py-1.5 text-[10px] font-bold uppercase transition-all ${weighting === w
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-muted-foreground hover:bg-muted'
@@ -150,6 +160,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   key={color.name}
                   onClick={() => setAccentColor(color.value)}
+                  aria-label={`Set accent color to ${color.name}`}
+                  aria-pressed={accentColor === color.value}
                   className={`group relative flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all hover:scale-110 ${accentColor === color.value ? 'border-primary ring-2 ring-primary/20' : 'border-transparent'}`}
                   title={color.name}
                 >
@@ -165,6 +177,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   type="color"
                   value={accentColor || '#3b82f6'}
                   onChange={(e) => setAccentColor(e.target.value)}
+                  aria-label="Custom accent color"
                   className="absolute inset-0 h-[150%] w-[150%] -translate-x-[25%] -translate-y-[25%] cursor-pointer border-none p-0"
                 />
               </div>
@@ -212,6 +225,8 @@ const Sidebar: React.FC<SidebarProps> = ({
               variant={transform.flipH ? "secondary" : "outline"}
               size="sm"
               onClick={() => setTransform({ ...transform, flipH: !transform.flipH })}
+              aria-label="Flip icons horizontally"
+              aria-pressed={transform.flipH}
               className={`h-7 flex-1 text-[10px] ${transform.flipH ? 'border-primary' : ''}`}
             >
               Flip H
@@ -220,12 +235,22 @@ const Sidebar: React.FC<SidebarProps> = ({
               variant={transform.flipV ? "secondary" : "outline"}
               size="sm"
               onClick={() => setTransform({ ...transform, flipV: !transform.flipV })}
+              aria-label="Flip icons vertically"
+              aria-pressed={transform.flipV}
               className={`h-7 flex-1 text-[10px] ${transform.flipV ? 'border-primary' : ''}`}
             >
               Flip V
             </Button>
           </div>
         </div>
+
+        {/* Import Zone */}
+        {onImportSvg && (
+          <div className="mb-6">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] opacity-40">Import_Assets</p>
+            <ImportZone onImport={onImportSvg} existingIcons={allIcons} />
+          </div>
+        )}
 
         {/* Navigation */}
         <div className="mb-6 space-y-1">
@@ -326,5 +351,4 @@ const Sidebar: React.FC<SidebarProps> = ({
     </div>
   );
 };
-
 export default Sidebar;

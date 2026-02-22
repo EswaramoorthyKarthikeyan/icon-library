@@ -1,6 +1,5 @@
-
 import React from "react";
-import { Weighting, IconTransform } from "../types";
+import { Weighting, IconTransform, IconData, MultiPath } from "../types";
 
 /**
  * Maps a stroke weighting name to its numeric SVG stroke-width value.
@@ -18,7 +17,6 @@ export const getStrokeWidth = (weighting: Weighting): number => {
 
 /**
  * Generates inline CSS transform style from an IconTransform object.
- * Used for React viewing.
  */
 export const getTransformStyle = (
     transform: IconTransform
@@ -30,41 +28,53 @@ export const getTransformStyle = (
 };
 
 /**
- * Generates an SVG transform attribute string.
- * Used for static SVG file export.
+ * Generates an SVG transform attribute string for exports.
  */
 export const getSvgTransformAttr = (transform: IconTransform): string => {
     const parts: string[] = [];
-    // Rotate around center (12,12)
     if (transform.rotate) parts.push(`rotate(${transform.rotate} 12 12)`);
-    // Scale from center? SVG scale is from top-left (0,0). To scale from center, we need translate-scale-translate.
-    // Or just rely on the fact that viewing it usually centers it.
-    // Actually, for simplicity in export, let's just use simple scale.
     if (transform.scale !== 1) parts.push(`scale(${transform.scale})`);
-    // Flips
     if (transform.flipH) parts.push(`translate(24 0) scale(-1 1)`);
     if (transform.flipV) parts.push(`translate(0 24) scale(1 -1)`);
-
     return parts.join(" ");
+};
+
+/**
+ * Resolves icon data based on current state (hover, active, disabled).
+ */
+export const resolveIconState = (icon: IconData, state?: 'hover' | 'active' | 'disabled'): IconData => {
+    if (!state || !icon.states || !icon.states[state]) return icon;
+    return { ...icon, ...icon.states[state] };
 };
 
 /**
  * Builds a complete SVG string for an icon, suitable for file export.
  */
 export const buildSvgContent = (
-    svgPath: string,
+    icon: IconData,
     transform: IconTransform,
     weighting: Weighting,
     customFillColor: string,
+    state?: 'hover' | 'active' | 'disabled'
 ): string => {
+    const resolvedIcon = resolveIconState(icon, state);
     const sw = getStrokeWidth(weighting);
     const transformAttr = getSvgTransformAttr(transform);
-    // Default to currentColor if customFillColor is empty or 'currentColor', otherwise specific color
-    const fill = (!customFillColor || customFillColor === 'currentColor') ? 'none' : customFillColor;
-    const stroke = (!customFillColor || customFillColor === 'currentColor') ? 'currentColor' : customFillColor;
+    
+    const globalStroke = (!customFillColor || customFillColor === 'currentColor') ? 'currentColor' : customFillColor;
 
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">
-  <path d="${svgPath}" ${transformAttr ? `transform="${transformAttr}"` : ''} />
+    const paths = resolvedIcon.paths || [{ d: resolvedIcon.svgPath }];
+    
+    const pathElements = paths.map(p => {
+        const stroke = p.color || globalStroke;
+        const opacity = p.opacity ?? 1;
+        return `<path d="${p.d}" stroke="${stroke}" stroke-opacity="${opacity}" />`;
+    }).join('\n  ');
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">
+  <g ${transformAttr ? `transform="${transformAttr}"` : ''}>
+    ${pathElements}
+  </g>
 </svg>`;
 };
 
@@ -72,32 +82,37 @@ export const buildSvgContent = (
  * Builds a React Component (JSX/TSX) string.
  */
 export const buildJsxContent = (
-    iconName: string,
-    svgPath: string,
+    icon: IconData,
     weighting: Weighting,
 ): string => {
     const sw = getStrokeWidth(weighting);
-    const componentName = iconName
+    const componentName = icon.name
         .split(/[-_]+/)
         .map(part => part.charAt(0).toUpperCase() + part.slice(1))
         .join('') + 'Icon';
 
+    const paths = icon.paths || [{ d: icon.svgPath }];
+    const jsxPaths = paths.map(p => {
+        const color = p.color ? `"${p.color}"` : 'stroke || "currentColor"';
+        const opacity = p.opacity !== undefined ? ` strokeOpacity={${p.opacity}}` : '';
+        return `<path d="${p.d}" stroke={${color}}${opacity} />`;
+    }).join('\n    ');
+
     return `import * as React from "react"
 
-export const ${componentName} = (props: React.SVGProps<SVGSVGElement>) => (
+export const ${componentName} = ({ stroke, ...props }: React.SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
     height="24"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="currentColor"
     strokeWidth="${sw}"
     strokeLinecap="round"
     strokeLinejoin="round"
     {...props}
   >
-    <path d="${svgPath}" />
+    ${jsxPaths}
   </svg>
 )
 `;

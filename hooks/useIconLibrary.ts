@@ -21,6 +21,7 @@ interface UseIconLibraryParams {
     synthesizedIcons: Record<string, IconData[]>;
     aiMetadataCache: Record<string, IconAiMetadata>;
     aiSearchResults: string[] | null;
+    customIcons: IconData[];
 }
 
 /**
@@ -36,6 +37,7 @@ export const useIconLibrary = ({
     synthesizedIcons,
     aiMetadataCache,
     aiSearchResults,
+    customIcons,
 }: UseIconLibraryParams) => {
     // Selection state
     const [activeIconId, setActiveIconId] = useState<string | null>("nav-grid");
@@ -91,8 +93,31 @@ export const useIconLibrary = ({
     const allIcons = useMemo(() => {
         const core = Object.values(ICON_LIBRARY).flat();
         const synth = Object.values(synthesizedIcons).flat();
-        return [...core, ...synth];
-    }, [synthesizedIcons]);
+        
+        return [...core, ...synth, ...customIcons];
+    }, [synthesizedIcons, customIcons, ICON_LIBRARY]);
+
+    // Grouping Logic for Variants
+    const groupedIcons = useMemo(() => {
+        const groups: Record<string, string[]> = {};
+        allIcons.forEach(icon => {
+            // Assume variants follow name-type pattern (e.g., home-filled)
+            const baseName = icon.name.split('-')[0];
+            if (!groups[baseName]) groups[baseName] = [];
+            groups[baseName].push(icon.id);
+        });
+
+        // Update icons with their variants
+        allIcons.forEach(icon => {
+            const baseName = icon.name.split('-')[0];
+            const variantIds = (groups[baseName] || []).filter(id => id !== icon.id);
+            if (variantIds.length > 0) {
+                icon.variants = variantIds;
+            }
+        });
+
+        return groups;
+    }, [allIcons]);
 
     // Currently active (previewed) icon
     const activeIcon = useMemo(
@@ -158,12 +183,12 @@ export const useIconLibrary = ({
     // Icons grouped by category for grid rendering
     const categoriesToRender = useMemo(() => {
         const groups: Record<string, IconData[]> = {};
-        const catsToProcess =
-            activeCollectionId || searchQuery.trim() || selectedCategory
-                ? Array.from(
-                    new Set(filteredIconsList.map((i) => i.category)),
-                )
-                : Object.keys(ICON_LIBRARY);
+        const catsToProcess = Array.from(
+            new Set([
+                ...Object.keys(ICON_LIBRARY),
+                ...filteredIconsList.map((i) => i.category),
+            ]),
+        );
 
         catsToProcess.forEach((cat) => {
             const icons = filteredIconsList.filter(
@@ -175,7 +200,7 @@ export const useIconLibrary = ({
         return groups;
     }, [filteredIconsList, searchQuery, selectedCategory, activeCollectionId]);
 
-    // Toggle a single icon's selection state
+    // Selection operations
     const handleToggleSelection = useCallback((id: string) => {
         setSelectedIds((prev) => {
             const next = new Set(prev);
@@ -186,6 +211,27 @@ export const useIconLibrary = ({
             }
             return next;
         });
+    }, []);
+
+    const handleInvertSelection = useCallback(() => {
+        setSelectedIds((prev) => {
+            const next = new Set<string>();
+            filteredIconsList.forEach(icon => {
+                if (!prev.has(icon.id)) {
+                    next.add(icon.id);
+                }
+            });
+            return next;
+        });
+    }, [filteredIconsList]);
+
+    const handleSelectFiltered = useCallback(() => {
+        const next = new Set<string>(filteredIconsList.map(i => i.id));
+        setSelectedIds(next);
+    }, [filteredIconsList]);
+
+    const handleClearSelection = useCallback(() => {
+        setSelectedIds(new Set());
     }, []);
 
     // Copy full specification to clipboard
@@ -247,7 +293,7 @@ export const useIconLibrary = ({
                 let mimeType: string = "text/plain";
 
                 const svgContent = buildSvgContent(
-                    icon.svgPath,
+                    icon,
                     transform,
                     weighting,
                     customFillColor,
@@ -260,7 +306,7 @@ export const useIconLibrary = ({
 
                 switch (format) {
                     case 'jsx':
-                        content = buildJsxContent(icon.name, icon.svgPath, weighting);
+                        content = buildJsxContent(icon, weighting);
                         fileName += ".tsx";
                         break;
                     case 'json':
@@ -322,7 +368,7 @@ export const useIconLibrary = ({
 
                 switch (format) {
                     case 'jsx':
-                        content = buildJsxContent(icon.name, icon.svgPath, weighting);
+                        content = buildJsxContent(icon, weighting);
                         ext = ".tsx";
                         break;
                     case 'json':
@@ -338,7 +384,7 @@ export const useIconLibrary = ({
                         break;
                     default:
                         content = buildSvgContent(
-                            icon.svgPath,
+                            icon,
                             transform,
                             weighting,
                             customFillColor,
@@ -418,10 +464,14 @@ export const useIconLibrary = ({
         allIcons,
         filteredIconsList,
         categoriesToRender,
+        groupedIcons,
 
         // Actions
         handleCopySpec,
         handleExportSingle,
         handleExport,
+        handleInvertSelection,
+        handleSelectFiltered,
+        handleClearSelection,
     };
 };

@@ -2,6 +2,7 @@
 import React from 'react';
 import { IconData, ViewportSize, Weighting, IconTransform, IconAiMetadata, ViewMode } from '../types';
 import { getStrokeWidth, getTransformStyle } from '../utils/svg';
+import { useArrowNavigation } from '../hooks/useArrowNavigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -29,13 +30,46 @@ const IconGrid: React.FC<IconGridProps> = ({
   const sw = getStrokeWidth(weighting);
   const transformStyle = getTransformStyle(transform);
 
-  // Responsive grid sizing handled by Tailwind grid classes or inline style if dynamic
+  // Responsive grid sizing - smaller on mobile
   const gridMinSize = viewportSize === 32 ? '60px' : viewportSize === 16 ? '40px' : '52px';
+  const mobileGridMinSize = viewportSize === 32 ? '50px' : viewportSize === 16 ? '32px' : '40px';
+
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  
+  // Calculate approximate columns for arrow navigation
+  const [cols, setCols] = React.useState(0);
+  
+  React.useEffect(() => {
+    if (!containerRef.current || viewMode !== 'grid') {
+        setCols(1);
+        return;
+    }
+    
+    const updateCols = () => {
+      if (!containerRef.current) return;
+      const width = containerRef.current.offsetWidth;
+      const itemWidth = window.innerWidth < 768 ? parseInt(mobileGridMinSize) : parseInt(gridMinSize);
+      const gap = window.innerWidth < 768 ? 4 : 8; // approx from gap-1/gap-2
+      const calculated = Math.floor((width + gap) / (itemWidth + gap));
+      setCols(calculated || 1);
+    };
+
+    updateCols();
+    const observer = new ResizeObserver(updateCols);
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [containerRef, viewMode, mobileGridMinSize, gridMinSize]);
+
+  useArrowNavigation(containerRef, {
+    selectors: 'button[aria-label^="Select "]',
+    enabled: true,
+    cols: viewMode === 'grid' ? cols : 1
+  });
 
   return (
-    <div className="mb-8">
-      <div className="mb-4 flex items-center justify-between border-b pb-2">
-        <div className="flex items-center gap-3">
+    <div className="mb-6 sm:mb-8">
+      <div className="mb-3 sm:mb-4 flex items-center justify-between border-b pb-1.5 sm:pb-2 gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={() => {
               const allInCatSelected = icons.every(i => selectedIds.has(i.id));
@@ -47,31 +81,34 @@ const IconGrid: React.FC<IconGridProps> = ({
                 }
               });
             }}
+            aria-label={`Select all icons in ${category}`}
+            aria-pressed={icons.every(i => selectedIds.has(i.id))}
             className={cn(
-              "flex h-4 w-4 items-center justify-center rounded border transition-colors",
+              "flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded border transition-colors flex-shrink-0",
               icons.every(i => selectedIds.has(i.id))
                 ? "bg-primary border-primary text-primary-foreground"
                 : "border-muted-foreground/30 hover:border-primary"
             )}
           >
-            {icons.every(i => selectedIds.has(i.id)) && <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+            {icons.every(i => selectedIds.has(i.id)) && <svg viewBox="0 0 24 24" width="8" height="8" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5" /></svg>}
           </button>
-          <span className="text-xs font-bold uppercase tracking-[0.4em] text-primary">
+          <span className="text-[9px] sm:text-xs font-bold uppercase tracking-[0.2em] sm:tracking-[0.4em] text-primary flex-shrink-0">
             {category}
           </span>
-          <div className="h-px w-24 bg-gradient-to-r from-primary/40 to-transparent" />
-          <span className="font-mono text-[10px] opacity-30">{icons.length} units</span>
+          <div className="h-px w-16 sm:w-24 bg-gradient-to-r from-primary/40 to-transparent flex-shrink-0" />
+          <span className="font-mono text-[8px] sm:text-[10px] opacity-30 flex-shrink-0">{icons.length}</span>
         </div>
       </div>
 
       <div
         className={cn(
-          "grid gap-2",
+          "grid gap-1 sm:gap-2",
           viewMode === 'grid'
             ? ""
             : "grid-cols-1"
         )}
-        style={viewMode === 'grid' ? { gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinSize}, 1fr))` } : {}}
+        ref={containerRef}
+        style={viewMode === 'grid' ? { gridTemplateColumns: `repeat(auto-fill, minmax(${window.innerWidth < 768 ? mobileGridMinSize : gridMinSize}, 1fr))` } : {}}
       >
         <TooltipProvider>
           {icons.map(icon => {
@@ -88,9 +125,11 @@ const IconGrid: React.FC<IconGridProps> = ({
                       onToggle(icon.id);
                       onAddToRecent(icon.id);
                     }}
+                    aria-label={`${isSelected ? 'Deselect' : 'Select'} ${icon.name}`}
+                    aria-pressed={isSelected}
                     className={cn(
                       "relative flex items-center rounded-md border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                      viewMode === 'grid' ? "aspect-square justify-center" : "h-12 px-4 gap-4",
+                      viewMode === 'grid' ? "aspect-square justify-center" : "h-10 sm:h-12 px-2 sm:px-4 gap-2 sm:gap-4",
                       isActive
                         ? "z-10 scale-[1.02] border-primary bg-accent shadow-md"
                         : isSelected
@@ -100,7 +139,7 @@ const IconGrid: React.FC<IconGridProps> = ({
                   >
                     <div className={cn(
                       "relative flex items-center justify-center",
-                      viewMode === 'grid' ? "" : "h-8 w-8 shrink-0"
+                      viewMode === 'grid' ? "" : "h-6 w-6 sm:h-8 sm:w-8 shrink-0"
                     )}>
                       {settings.showGrid && viewMode === 'grid' && (
                         <div className="absolute inset-0 overflow-hidden opacity-[var(--grid-opacity)]" style={{ '--grid-opacity': settings.gridOpacity } as any}>
@@ -116,16 +155,25 @@ const IconGrid: React.FC<IconGridProps> = ({
 
                       <svg
                         viewBox="0 0 24 24"
-                        fill={customFillColor === 'currentColor' ? 'none' : (customFillColor === 'none' ? 'none' : customFillColor)}
-                        stroke="currentColor"
+                        fill="none"
                         strokeWidth={sw}
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         width={viewportSize === 32 ? '32' : viewportSize === 16 ? '16' : '24'}
                         height={viewportSize === 32 ? '32' : viewportSize === 16 ? '16' : '24'}
                         style={{ ...transformStyle, transition: 'transform 0.3s ease' }}
+                        className="transition-all"
+                        role="img"
+                        aria-hidden="true"
                       >
-                        <path d={icon.svgPath} />
+                         {(icon.paths || [{ d: icon.svgPath }]).map((p, i) => (
+                           <path 
+                            key={i} 
+                            d={p.d} 
+                            stroke={p.color || (customFillColor === 'none' ? 'currentColor' : (customFillColor === 'currentColor' ? 'currentColor' : customFillColor))} 
+                            strokeOpacity={p.opacity ?? 1} 
+                           />
+                         ))}
                       </svg>
                     </div>
 

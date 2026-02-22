@@ -1,110 +1,87 @@
-# Web App Review Instructions (AI + Human Optimized)
+Based on my analysis, here are the key gaps in this icon library app:
 
----
+🔴 Critical Gaps
+No Undo/Redo System
 
-## Role
-You are a **Senior QA + UX Reviewer**.  
-Follow all instructions strictly. Do not skip any section.
+Icon transformations (rotate, scale, flip) can't be undone
+No history of changes to selections or customizations
+No Keyboard Shortcuts
 
----
+No hotkeys for common actions (search, copy, export, select all)
+Reduces efficiency for power users
+Cannot Import Custom SVGs
 
-## Purpose
-Provide structured, objective feedback on a web application’s usability, design, performance, accessibility, and functionality to improve product quality.
+Users can only browse built-in icons or AI-generated ones
+No way to add external SVG files to the library
+Limited Accessibility Features
 
----
+No ARIA labels on interactive elements
+SVG previews lack alt attributes
+No keyboard navigation testing
+No contrast checker for custom colors
+No Animation Preview
 
-## Review Depth
-Choose one before starting:
+Icons can't be previewed with animations
+No export for CSS animations or animated SVGs
+Missing Batch Operations
 
-- **Quick** → Only major issues
-- **Standard** → Major + medium issues
-- **Deep** → Full audit (all findings)
+Can only bulk-select and create collections
+No bulk color change, bulk transform, or bulk rename
+🟡 Important Gaps
+No Real-time Collaboration
 
----
+No ability to share live edits or comments
+No version control or change tracking
+Limited Error Recovery
 
-## Pre-Review Checklist
-Confirm before evaluation:
+No save/restore of unsaved changes
+No error logging or recovery UI beyond AI rate limiting
+No Icon Naming Conventions
 
-- App URL / Build version
-- Browser + Device
-- Logged-in state (if required)
-- Cache cleared / Incognito used
-- Stable network connection
+No enforcement of naming standards (kebab-case, etc.)
+No duplicate name detection
+Missing Icon Comparison
 
----
+Can't compare icon variants side-by-side
+No visual diff between versions
+No Analytics/Usage Metrics
 
-## Evaluation Categories
+No tracking of most-used icons
+No usage statistics dashboard
+Limited Export Formats
 
-### 🎨 UI Design
-- Alignment and spacing consistency
-- Typography hierarchy
-- Color contrast and usage
-- Component consistency
-- Visual clutter
+Only SVG export (Inspector supports more via onExport but not fully implemented)
+No PNG, icon font, or web component exports
+🟠 Minor/Nice-to-Have Gaps
+No Offline Mode
 
----
+App requires internet for AI features
+No service worker or offline-first strategy
+No Icon Annotations/Comments
 
-### 🧭 UX / Usability
-- Navigation clarity
-- Task completion ease
-- Interaction feedback
-- Discoverability
-- First-time user experience
+Can't add notes to specific icons
+No collaboration comments
+No Responsive Preview Contexts
 
----
+Playground only shows component patterns, not actual responsive layouts
+No mobile/tablet/desktop preview modes
+No Design System Documentation
 
-### ⚡ Performance
-- Page load speed
-- Interaction responsiveness
-- Animation smoothness
-- Perceived latency
+No auto-generated component docs or Storybook integration
+No design tokens export
+Limited Performance Monitoring
 
----
+No metrics on generation speed, search latency
+No performance dashboard
+No Icon Variants/States
 
-### 📱 Responsiveness
-- Mobile layout behavior
-- Tablet scaling
-- Breakpoint handling
-- Touch target sizes
-- Scroll usability
+Can't define filled/outlined/duotone variants
+No state management (hover, active, disabled)
+Missing Search Filters
 
----
+No advanced filters (by date, by format, by usage)
+Search history exists but limited
+No Mobile Responsiveness
 
-### ♿ Accessibility
-- Keyboard navigation
-- Screen reader compatibility
-- Focus indicators
-- Contrast compliance
-- Image alt text
-
----
-
-### ⚙️ Functionality
-- Broken elements
-- Form validation
-- Edge cases
-- Data persistence
-- Feature correctness
-
----
-
-### ✍️ Content & Copy
-- Grammar clarity
-- Tone consistency
-- CTA clarity
-- Error message usefulness
-
----
-
-## Severity Logic
-Classify issues using rules:
-
-- **Critical** → Blocks task / crash
-- **High** → Causes confusion or failure risk
-- **Medium** → Slows usage or friction
-- **Low** → Cosmetic or minor
-
----
-
-## Issue Reporting Format
-Use this exact structure:
+UI likely doesn't work well on mobile devices
+Resizable panels don't adapt to small screens

@@ -4,7 +4,7 @@ import { createAIClient, withBackoff, isRateLimitError } from '../utils/api';
 import { ICON_LIBRARY } from '../constants.tsx';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea"; // Assuming I need to create it or use Input as textarea
+// using regular textarea below
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Zap, AlertTriangle, RefreshCw, Plus, LayoutGrid } from 'lucide-react';
