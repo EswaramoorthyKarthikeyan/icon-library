@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, Variants, useScroll, useTransform } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Layers, Palette, MousePointer2, ArrowRight, History, UploadCloud, CheckCircle2, SplitSquareHorizontal, MessageSquareText, BookOpen, Keyboard } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -168,7 +168,7 @@ export const LandingPage: React.FC = () => {
         </div>
 
         <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:grid-flow-dense auto-rows-fr">
             {bentoItems.map((item, i) => (
               <motion.div
                 key={i}
