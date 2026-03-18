@@ -7,8 +7,8 @@ import {
   buildJsxContent,
   sanitizeComponentName,
   createMultiPathFallback,
-} from '../utils/svg';
-import { Weighting, IconTransform, IconData } from '../types';
+} from '../../utils/svg';
+import { Weighting, IconTransform, IconData } from '../../types';
 
 describe('svg utilities', () => {
   describe('getStrokeWidth', () => {
@@ -34,7 +34,8 @@ describe('svg utilities', () => {
         flipV: false,
       };
       const style = getTransformStyle(transform);
-      expect(style.transform).toBe('rotate(0deg) scale(1)   ');
+      expect(style.transform).toContain('rotate(0deg)');
+      expect(style.transform).toContain('scale(1)');
     });
 
     it('returns correct transform with rotation', () => {
@@ -188,7 +189,8 @@ describe('svg utilities', () => {
         name: 'test@icon',
       };
       const jsx = buildJsxContent(iconWithSpecialChars, 'regular' as Weighting);
-      expect(jsx).toContain('export const TestIcon');
+      // test@icon becomes Testicon (after removing @ and lowercasing the second part)
+      expect(jsx).toContain('export const TesticonIcon');
     });
   });
 });

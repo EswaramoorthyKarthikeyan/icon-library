@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ImportZone from './ImportZone';
+import { IconQuickAccess } from './IconQuickAccess';
 
 interface SidebarProps {
   viewportSize: ViewportSize;
@@ -39,6 +40,8 @@ interface SidebarProps {
   searchInputRef?: React.RefObject<HTMLInputElement>;
   onOpenFilters?: () => void;
   onImportSvg?: (icon: IconData) => void;
+  customFillColor?: string;
+  favoriteIds?: string[];
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -47,7 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onDeleteCollection, accentColor, setAccentColor, selectedCount, onExport,
   aiEnabled, semanticSearchEnabled, setSemanticSearchEnabled, isAiSearching, transform, setTransform,
   recentlyViewedIds, allIcons, onPreview, isMobile = false, searchInputRef, onOpenFilters,
-  onImportSvg
+  onImportSvg, customFillColor = 'currentColor', favoriteIds = [],
 }) => {
   const [exportFormat, setExportFormat] = React.useState<'svg' | 'jsx' | 'json'>('svg');
 
@@ -262,6 +265,26 @@ const Sidebar: React.FC<SidebarProps> = ({
             <Package className="h-4 w-4" />
             All Registry
           </button>
+
+          {/* Favorites & Recently Used Quick Access */}
+          <IconQuickAccess
+            iconIds={favoriteIds}
+            allIcons={allIcons}
+            onPreview={onPreview}
+            weighting={weighting}
+            transform={transform}
+            customFillColor={customFillColor}
+            type="favorites"
+          />
+          <IconQuickAccess
+            iconIds={recentlyViewedIds}
+            allIcons={allIcons}
+            onPreview={onPreview}
+            weighting={weighting}
+            transform={transform}
+            customFillColor={customFillColor}
+            type="recent"
+          />
 
           <div className="pt-2">
             <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-[0.1em] opacity-50">Categories</p>

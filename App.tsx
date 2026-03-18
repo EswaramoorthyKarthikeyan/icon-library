@@ -9,8 +9,19 @@ import { useIconLibrary } from './hooks/useIconLibrary';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { useAccessibility } from './hooks/useAccessibility';
 import { useAutoSave, useRecoveryCheck, getCustomIcons, saveCustomIcon, getAnnotations } from './hooks/useAutoSave';
+import { useIconMeta, useFavorites, useRecentlyUsed } from './hooks/useIconMeta';
 import { applyFilters as applyAdvancedFilters, calculateFilterStats } from './hooks/useAdvancedSearch';
 import { ICON_LIBRARY } from './constants';
+
+// Utilities
+import { exportFavorites } from './utils/export';
+
+// Command Palette
+import { CommandPalette, useCommandPalette } from './components/CommandPalette';
+import { Star, Download, Settings, Home, Zap } from 'lucide-react';
+
+// Similarity Panel
+import { SimilarityPanel, useSimilarityDetector } from './components/SimilarityPanel';
 
 // Mobile detection hook
 const useIsMobile = () => {
@@ -116,6 +127,22 @@ const App: React.FC = () => {
 	// ─── Active Icon ──────────────────────────────────────────
 	const [activeIconId, setActiveIconId] = useState<string | null>('nav-grid');
 
+	// ─── Icon Metadata (Favorites, Ratings, Recently Used) ────
+	const { isFavorite, rating, toggleFavorite, setRating, markAsRecentlyUsed } = useIconMeta(activeIconId);
+	const { favoriteIds, refresh: refreshFavorites } = useFavorites();
+	const { recentIds } = useRecentlyUsed(20);
+	const { showSimilarity, setShowSimilarity } = useSimilarityDetector(activeIconId);
+
+	// Refresh favorites and recent when icon changes
+	useEffect(() => {
+		if (activeIconId) {
+			markAsRecentlyUsed();
+		}
+	}, [activeIconId, markAsRecentlyUsed]);
+
+	// ─── Command Palette ───────────────────────────────────────
+	const { isOpen: isPaletteOpen, setIsOpen: setPaletteOpen } = useCommandPalette();
+
 	// ─── AI Features ──────────────────────────────────────────
 	const baseIcons = useMemo(() => Object.values(ICON_LIBRARY).flat(), []);
 
@@ -176,6 +203,56 @@ const App: React.FC = () => {
 		aiSearchResults: ai.aiSearchResults,
 		customIcons
 	});
+
+	// Multi-select with Shift+Click
+	const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+
+	// ─── Command Palette Items ─────────────────────────────────
+	const commandItems = useMemo(() => [
+		{
+			id: 'export-all-favorites',
+			label: 'Export All Favorites',
+			icon: <Download className="h-4 w-4" />,
+			action: () => exportFavorites(library.allIcons, favoriteIds),
+			category: 'Export',
+		},
+		{
+			id: 'toggle-dark-mode',
+			label: 'Toggle Dark Mode',
+			icon: <Settings className="h-4 w-4" />,
+			action: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
+			category: 'View',
+		},
+		{
+			id: 'show-favorites',
+			label: 'Show Favorites',
+			icon: <Star className="h-4 w-4" />,
+			action: () => setActiveTab('grid'),
+			category: 'Navigate',
+		},
+		{
+			id: 'go-home',
+			label: 'Go to All Icons',
+			icon: <Home className="h-4 w-4" />,
+			action: () => { library.setSelectedCategory(null); library.setActiveCollectionId(null); },
+			category: 'Navigate',
+		},
+		{
+			id: 'toggle-ai',
+			label: 'Toggle AI Features',
+			icon: <Zap className="h-4 w-4" />,
+			action: () => handleUpdateSettings({ aiEnabled: !settings.aiEnabled }),
+			category: 'Settings',
+		},
+		// Generate icon quick-access commands
+		...favoriteIds.slice(0, 10).map(id => ({
+			id: `go-icon-${id}`,
+			label: `Go to: ${id}`,
+			icon: <Star className="h-4 w-4" />,
+			action: () => { setActiveIconId(id); setActiveTab('inspector'); },
+			category: 'Favorites',
+		})),
+	], [favoriteIds, theme, library, setActiveTab, settings.aiEnabled, handleUpdateSettings]);
 
 	// Sync activeIconId for AI effects
 	useEffect(() => {
@@ -495,7 +572,7 @@ const App: React.FC = () => {
 								{activeTab === 'grid' && (
 									<div>
 										{Object.entries(categoriesToDisplayWithFilters).map(([cat, icons]) => (
-											<IconGrid
+ 											<IconGrid
 												key={cat}
 												category={cat}
 												icons={icons}
@@ -511,6 +588,8 @@ const App: React.FC = () => {
 												onToggle={library.handleToggleSelection}
 												onAddToRecent={library.addToRecent}
 												viewMode={library.viewMode}
+												lastSelectedId={lastSelectedId}
+												setLastSelectedId={setLastSelectedId}
 											/>
 										))}
 										{Object.keys(categoriesToDisplayWithFilters).length === 0 && (
@@ -605,13 +684,15 @@ const App: React.FC = () => {
 									semanticSearchEnabled={settings.semanticSearchEnabled}
 									setSemanticSearchEnabled={handleSetSemanticSearch}
 									isAiSearching={ai.isAiSearching}
-									recentlyViewedIds={library.recentlyViewedIds}
+									recentlyViewedIds={recentIds}
 									allIcons={library.allIcons}
 									onPreview={library.setActiveIconId}
 									onImportSvg={handleSaveCustomIcon}
 									isMobile={true}
 									searchInputRef={searchInputRef}
 									onOpenFilters={() => setIsFilterOpen(true)}
+									customFillColor={customFillColor}
+									favoriteIds={favoriteIds}
 								/>
 							</div>
 						</div>
@@ -644,13 +725,15 @@ const App: React.FC = () => {
 								semanticSearchEnabled={settings.semanticSearchEnabled}
 								setSemanticSearchEnabled={handleSetSemanticSearch}
 								isAiSearching={ai.isAiSearching}
-								recentlyViewedIds={library.recentlyViewedIds}
+								recentlyViewedIds={recentIds}
 								allIcons={library.allIcons}
 								onPreview={library.setActiveIconId}
 								onImportSvg={handleSaveCustomIcon}
 								isMobile={false}
 								searchInputRef={searchInputRef}
 								onOpenFilters={() => setIsFilterOpen(true)}
+								customFillColor={customFillColor}
+								favoriteIds={favoriteIds}
 							/>
 						</ResizablePanel>
 
@@ -677,8 +760,10 @@ const App: React.FC = () => {
 													annotatedIconIds={annotatedIconIds}
 													onPreview={library.setActiveIconId}
 													onToggle={library.handleToggleSelection}
-													onAddToRecent={library.addToRecent}
+ 													onAddToRecent={library.addToRecent}
 													viewMode={library.viewMode}
+													lastSelectedId={lastSelectedId}
+													setLastSelectedId={setLastSelectedId}
 												/>
 											))}
 											{Object.keys(library.categoriesToRender).length === 0 && (
@@ -732,17 +817,26 @@ const App: React.FC = () => {
 												viewportSize={viewportSize}
 												weighting={weighting}
 												transform={transform}
-												customFillColor={customFillColor}
-												relatedIcons={ai.relatedIconsCache[library.activeIconId || ''] || []}
-												aiMetadata={ai.aiMetadataCache[library.activeIconId || ''] || null}
-												isGeneratingMetadata={ai.isGeneratingMetadata}
-												allIcons={library.allIcons}
-												settings={settings}
-												onCopySpec={library.handleCopySpec}
-												onPreview={library.setActiveIconId}
-												onExport={library.handleExportSingle}
-												onAddToRecent={library.addToRecent}
-											/>
+											customFillColor={customFillColor}
+											relatedIcons={ai.relatedIconsCache[library.activeIconId || ''] || []}
+											aiMetadata={ai.aiMetadataCache[library.activeIconId || ''] || null}
+											isGeneratingMetadata={ai.isGeneratingMetadata}
+											allIcons={library.allIcons}
+											settings={settings}
+											onCopySpec={library.handleCopySpec}
+											onPreview={library.setActiveIconId}
+											onExport={library.handleExportSingle}
+											onAddToRecent={library.addToRecent}
+											isFavorite={isFavorite}
+											rating={rating}
+											onToggleFavorite={async () => {
+												await toggleFavorite();
+												refreshFavorites();
+											}}
+											onSetRating={async (newRating: number) => {
+												await setRating(newRating);
+											}}
+										/>
 										</div>
 									)}
 								</ErrorBoundary>
@@ -801,42 +895,32 @@ const App: React.FC = () => {
 						<span className="text-xs font-bold uppercase tracking-widest">{ai.apiError}</span>
 						<button
 							onClick={() => ai.setApiError(null)}
-							className="opacity-70 hover:opacity-100"
+							className="text-xs opacity-70 hover:opacity-100"
 						>
-							✕
+							Dismiss
 						</button>
 					</div>
 				)}
 
-				<FilterPanel
-					isOpen={isFilterOpen}
-					onClose={() => setIsFilterOpen(false)}
-					onApplyFilters={handleApplyFilters}
-					savedFilters={savedFilters}
-					onSaveFilter={handleSaveFilter}
-					onLoadFilter={handleLoadFilter}
-					onDeleteFilter={handleDeleteFilter}
-					filterStats={calculateFilterStats(library.allIcons, filteredByAdvancedSearch)}
+				{/* Command Palette */}
+				<CommandPalette
+					isOpen={isPaletteOpen}
+					onClose={() => setPaletteOpen(false)}
+					items={commandItems}
 				/>
 
-				{activeTab === 'grid' && (
-					<SelectionToolbar 
-						selectedCount={library.selectedIds.size}
-						onClearSelection={library.handleClearSelection}
-						onInvertSelection={library.handleInvertSelection}
-						onSelectAll={library.handleSelectFiltered}
-						onExport={library.handleExport}
-						onAddToCollection={handleCreateCollection}
-						onCompare={handleOpenCompare}
+				{/* Similarity Panel */}
+				{showSimilarity && library.activeIcon && (
+					<SimilarityPanel
+						icon={library.activeIcon}
+						allIcons={library.allIcons}
+						onPreview={(id) => { setActiveIconId(id); setActiveTab('inspector'); }}
+						onClose={() => setShowSimilarity(false)}
+						weighting={weighting}
+						transform={transform}
+						customFillColor={customFillColor}
 					/>
 				)}
-
-				{comparisonTool}
-
-				<ShortcutLegend 
-					isOpen={showShortcuts} 
-					onClose={() => setShowShortcuts(false)} 
-				/>
 			</div>
 		</ErrorBoundary>
 	);

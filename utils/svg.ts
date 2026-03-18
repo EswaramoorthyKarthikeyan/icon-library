@@ -52,7 +52,7 @@ export const resolveIconState = (icon: IconData, state?: 'hover' | 'active' | 'd
  * Sanitizes a string to be used as a valid JavaScript/React component name.
  * Only allows alphanumeric characters and capitalizes the first letter.
  */
-const sanitizeComponentName = (name: string): string => {
+export const sanitizeComponentName = (name: string): string => {
     return name
         .split(/[-_]+/)
         .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
@@ -64,7 +64,7 @@ const sanitizeComponentName = (name: string): string => {
 /**
  * Creates a complete MultiPath fallback object with all required fields.
  */
-const createMultiPathFallback = (svgPath: string): MultiPath => ({
+export const createMultiPathFallback = (svgPath: string): MultiPath => ({
     d: svgPath,
     color: undefined,
     opacity: undefined,
@@ -169,3 +169,104 @@ export const ${componentName} = ({ stroke, ...props }: React.SVGProps<SVGSVGElem
 )
 `;
 };
+
+/**
+ * Calculate a similarity score between two SVG path strings.
+ * Returns a number between 0 (different) and 1 (identical).
+ */
+export function calculatePathSimilarity(path1: string, path2: string): number {
+  // Normalize paths (remove extra spaces, convert to lowercase)
+  const normalize = (p: string) => p.toLowerCase().replace(/\s+/g, '').replace(/[^mmlhvcsqta]/g, '');
+  const n1 = normalize(path1);
+  const n2 = normalize(path2);
+  
+  // Exact match
+  if (n1 === n2) return 1;
+  
+  // Quick character-level similarity check
+  const chars1 = n1.split('');
+  const chars2 = n2.split('');
+  
+  // Calculate overlap ratio
+  const shorter = chars1.length < chars2.length ? chars1 : chars2;
+  const longer = chars1.length < chars2.length ? chars2 : chars1;
+  
+  let matches = 0;
+  const longerChars = new Set(longer);
+  
+  shorter.forEach(c => {
+    if (longerChars.has(c)) matches++;
+  });
+  
+  return matches / longer.length;
+}
+
+/**
+ * Find duplicate or similar icons in the icon library.
+ * Returns array of icon IDs that are similar to the target icon.
+ */
+export function findSimilarIcons(
+  targetIcon: IconData,
+  allIcons: IconData[],
+  threshold: number = 0.7
+): string[] {
+  if (!targetIcon.svgPath && (!targetIcon.paths || targetIcon.paths.length === 0)) {
+    return [];
+  }
+  
+  const targetPaths = targetIcon.paths || [{ d: targetIcon.svgPath }];
+  const similarities: Array<{ id: string; score: number }> = [];
+  
+  for (const icon of allIcons) {
+    if (icon.id === targetIcon.id) continue;
+    
+    const iconPaths = icon.paths || [{ d: icon.svgPath }];
+    
+    // Calculate similarity for each path pair and take average
+    let totalScore = 0;
+    let pairs = 0;
+    
+    for (const targetPath of targetPaths) {
+      for (const sourcePath of iconPaths) {
+        const score = calculatePathSimilarity(targetPath.d, sourcePath.d);
+        totalScore += score;
+        pairs++;
+      }
+    }
+    
+    const avgScore = pairs > 0 ? totalScore / pairs : 0;
+    
+    if (avgScore >= threshold) {
+      similarities.push({ id: icon.id, score: avgScore });
+    }
+  }
+  
+  // Sort by similarity (descending)
+  similarities.sort((a, b) => b.score - a.score);
+  
+  return similarities.map(s => s.id);
+}
+
+/**
+ * Compare two icons and return similarity analysis.
+ */
+export function compareIcons(icon1: IconData, icon2: IconData) {
+  const path1 = icon1.paths || [{ d: icon1.svgPath }];
+  const path2 = icon2.paths || [{ d: icon2.svgPath }];
+  
+  const similarities: Array<{ pathIndex: number; score: number }> = [];
+  
+  for (let i = 0; i < Math.min(path1.length, path2.length); i++) {
+    const score = calculatePathSimilarity(path1[i].d, path2[i].d);
+    similarities.push({ pathIndex: i, score });
+  }
+  
+  const avgScore = similarities.reduce((sum, s) => sum + s.score, 0) / similarities.length;
+  
+  return {
+    overallSimilarity: avgScore,
+    pathSimilarities: similarities,
+    isDuplicate: avgScore > 0.9,
+    isSimilar: avgScore > 0.7 && avgScore <= 0.9,
+  };
+}

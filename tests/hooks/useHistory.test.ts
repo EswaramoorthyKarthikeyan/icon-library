@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { shallowEqual } from '../hooks/useHistory';
-import { Weighting, IconTransform } from '../types';
+import { shallowEqual } from '../../hooks/useHistory';
+import { Weighting, IconTransform } from '../../types';
 
 describe('useHistory utilities', () => {
   describe('shallowEqual', () => {

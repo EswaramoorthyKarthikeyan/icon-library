@@ -22,11 +22,14 @@ interface IconGridProps {
   onPreview: (id: string | null) => void;
   onToggle: (id: string) => void;
   onAddToRecent: (id: string) => void;
+  lastSelectedId?: string | null;
+  setLastSelectedId?: (id: string | null) => void;
 }
 
 const IconGrid: React.FC<IconGridProps> = ({
   category, icons, viewportSize, weighting, transform, activeIconId, selectedIds,
-  settings, aiMetadataCache: _aiMetadataCache, customFillColor, annotatedIconIds = new Set(), viewMode, onPreview, onToggle, onAddToRecent
+  settings, aiMetadataCache: _aiMetadataCache, customFillColor, annotatedIconIds = new Set(), viewMode, onPreview, onToggle, onAddToRecent,
+  lastSelectedId, setLastSelectedId,
 }) => {
   const sw = getStrokeWidth(weighting);
   const transformStyle = getTransformStyle(transform);
@@ -122,10 +125,45 @@ const IconGrid: React.FC<IconGridProps> = ({
               <Tooltip key={icon.id}>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
                       onPreview(icon.id);
-                      onToggle(icon.id);
+                      
+                      // Shift+click for range selection
+                      if (e.shiftKey && lastSelectedId && setLastSelectedId) {
+                        const iconIds = icons.map(i => i.id);
+                        const startIdx = iconIds.indexOf(lastSelectedId);
+                        const endIdx = iconIds.indexOf(icon.id);
+                        
+                        if (startIdx !== -1 && endIdx !== -1) {
+                          const [min, max] = startIdx < endIdx ? [startIdx, endIdx] : [endIdx, startIdx];
+                          for (let i = min; i <= max; i++) {
+                            const id = iconIds[i];
+                            if (!selectedIds.has(id)) {
+                              onToggle(id);
+                            }
+                          }
+                        }
+                      } else if (e.shiftKey && selectedIds.has(icon.id)) {
+                        // Clicking selected icon with shift clears selection from lastSelectedId
+                        const iconIds = icons.map(i => i.id);
+                        const startIdx = iconIds.indexOf(lastSelectedId || icon.id);
+                        const endIdx = iconIds.indexOf(icon.id);
+                        
+                        if (startIdx !== -1 && endIdx !== -1) {
+                          const [min, max] = startIdx < endIdx ? [startIdx, endIdx] : [endIdx, startIdx];
+                          for (let i = min; i <= max; i++) {
+                            const id = iconIds[i];
+                            if (selectedIds.has(id)) {
+                              onToggle(id);
+                            }
+                          }
+                        }
+                      } else {
+                        onToggle(icon.id);
+                      }
+                      
                       onAddToRecent(icon.id);
+                      setLastSelectedId?.(icon.id);
                     }}
                     aria-label={`${isSelected ? 'Deselect' : 'Select'} ${icon.name}`}
                     aria-pressed={isSelected}

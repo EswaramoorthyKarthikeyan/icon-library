@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import type { IconData, ViewportSize, Weighting, IconTransform, IconAiMetadata } from '../types';
 import { getStrokeWidth, getTransformStyle, resolveIconState } from '../utils/svg';
-import { Copy, Download, Eye, Loader2, MousePointer2, Fingerprint, Ban } from 'lucide-react';
+import { Copy, Download, Eye, Loader2, MousePointer2, Fingerprint, Ban, Star } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import VariantSwitcher from './VariantSwitcher';
 import IconAnnotations from './IconAnnotations';
+import { StarRating } from './StarRating';
+import { SizePreview } from './SizePreview';
 
 interface InspectorProps {
   icon: IconData | null;
@@ -23,12 +25,17 @@ interface InspectorProps {
   onPreview: (id: string) => void;
   onExport: (icon: IconData, format: 'svg' | 'png' | 'jsx' | 'json') => void;
   onAddToRecent: (id: string) => void;
+  isFavorite?: boolean;
+  rating?: number;
+  onToggleFavorite?: () => void;
+  onSetRating?: (rating: number) => void;
 }
 
 const Inspector: React.FC<InspectorProps> = ({
   icon, viewportSize, weighting, transform, customFillColor,
   relatedIcons, aiMetadata, isGeneratingMetadata, allIcons,
   settings, onCopySpec, onPreview, onExport, onAddToRecent,
+  isFavorite = false, rating = 0, onToggleFavorite, onSetRating,
 }) => {
   const [testState, setTestState] = useState<'hover' | 'active' | 'disabled' | null>(null);
 
@@ -137,6 +144,32 @@ const Inspector: React.FC<InspectorProps> = ({
           <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-primary">
             {icon.category} / {icon.id}
           </span>
+          {/* Favorite & Rating Controls */}
+          <div className="mt-3 flex items-center justify-center gap-4">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={onToggleFavorite}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-muted-foreground/20 transition-all hover:border-yellow-400/50 hover:bg-yellow-400/10"
+                    aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                  >
+                    <Star
+                      className={`h-4 w-4 transition-colors ${isFavorite ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`}
+                    />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isFavorite ? 'Remove from favorites' : 'Add to favorites'}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <StarRating
+              rating={rating}
+              onChange={onSetRating}
+              size={16}
+            />
+          </div>
         </div>
 
         {icon.isSynthesized && (
@@ -184,6 +217,17 @@ const Inspector: React.FC<InspectorProps> = ({
             </div>
           </div>
         )}
+
+        {/* Size Preview */}
+        <div className="mt-3 w-full border-t pt-3">
+          <p className="mb-2 text-center text-[10px] font-bold uppercase tracking-[0.1em] opacity-50">Size_Preview</p>
+          <SizePreview
+            icon={icon}
+            weighting={weighting}
+            transform={transform}
+            customFillColor={customFillColor}
+          />
+        </div>
       </div>
 
       {/* Variants Switcher */}

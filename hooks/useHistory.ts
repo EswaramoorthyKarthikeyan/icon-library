@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
  * Shallow equality check for two values
  * Handles primitives, objects, and arrays
  */
-function shallowEqual<T>(a: T, b: T): boolean {
+export function shallowEqual<T>(a: T, b: T): boolean {
   // Handle identical references
   if (a === b) return true;
 

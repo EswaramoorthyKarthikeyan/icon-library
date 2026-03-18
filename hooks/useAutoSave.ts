@@ -31,6 +31,15 @@ const DB_NAME = 'icon-library-db';
 const STORE_NAME = 'drafts';
 const CUSTOM_ICONS_STORE = 'custom_icons';
 const ANNOTATIONS_STORE = 'annotations';
+const ICON_META_STORE = 'icon_meta';
+
+// Icon metadata for favorites, ratings, and recently used
+export interface IconMeta {
+  id: string;
+  isFavorite: boolean;
+  rating: number; // 0-5 stars
+  lastUsed: number; // timestamp
+}
 
 /**
  * Initialize IndexedDB for storing drafts
@@ -62,6 +71,10 @@ async function initDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(ANNOTATIONS_STORE)) {
         console.log('Creating store:', ANNOTATIONS_STORE);
         db.createObjectStore(ANNOTATIONS_STORE, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(ICON_META_STORE)) {
+        console.log('Creating store:', ICON_META_STORE);
+        db.createObjectStore(ICON_META_STORE, { keyPath: 'id' });
       }
     };
   });
@@ -471,4 +484,90 @@ export async function saveAnnotation(id: string, text: string): Promise<void> {
   } catch (error) {
     console.error('Failed to save annotation:', error);
   }
+}
+
+// --- Icon Metadata (Favorites, Ratings, Recently Used) ---
+
+export async function getIconMeta(id: string): Promise<IconMeta> {
+  try {
+    const db = await initDB();
+    const transaction = db.transaction([ICON_META_STORE], 'readonly');
+    const store = transaction.objectStore(ICON_META_STORE);
+    return new Promise((resolve, reject) => {
+      const request = store.get(id);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const result = request.result;
+        resolve(result || { id, isFavorite: false, rating: 0, lastUsed: 0 });
+      };
+    });
+  } catch (error) {
+    console.error('Failed to get icon meta:', error);
+    return { id, isFavorite: false, rating: 0, lastUsed: 0 };
+  }
+}
+
+export async function getAllIconMeta(): Promise<IconMeta[]> {
+  try {
+    const db = await initDB();
+    const transaction = db.transaction([ICON_META_STORE], 'readonly');
+    const store = transaction.objectStore(ICON_META_STORE);
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result || []);
+    });
+  } catch (error) {
+    console.error('Failed to get all icon meta:', error);
+    return [];
+  }
+}
+
+export async function updateIconMeta(id: string, updates: Partial<Omit<IconMeta, 'id'>>): Promise<void> {
+  try {
+    const current = await getIconMeta(id);
+    const updated: IconMeta = { ...current, id, ...updates };
+    
+    const db = await initDB();
+    const transaction = db.transaction([ICON_META_STORE], 'readwrite');
+    const store = transaction.objectStore(ICON_META_STORE);
+    
+    await new Promise((resolve, reject) => {
+      const request = store.put(updated);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+  } catch (error) {
+    console.error('Failed to update icon meta:', error);
+  }
+}
+
+export async function toggleFavorite(id: string): Promise<boolean> {
+  const current = await getIconMeta(id);
+  const newFavorite = !current.isFavorite;
+  await updateIconMeta(id, { isFavorite: newFavorite });
+  return newFavorite;
+}
+
+export async function setRating(id: string, rating: number): Promise<void> {
+  const clampedRating = Math.max(0, Math.min(5, rating));
+  await updateIconMeta(id, { rating: clampedRating });
+}
+
+export async function markAsRecentlyUsed(id: string): Promise<void> {
+  await updateIconMeta(id, { lastUsed: Date.now() });
+}
+
+export async function getFavoriteIds(): Promise<string[]> {
+  const allMeta = await getAllIconMeta();
+  return allMeta.filter(m => m.isFavorite).map(m => m.id);
+}
+
+export async function getRecentlyUsedIds(limit: number = 20): Promise<string[]> {
+  const allMeta = await getAllIconMeta();
+  return allMeta
+    .filter(m => m.lastUsed > 0)
+    .sort((a, b) => b.lastUsed - a.lastUsed)
+    .slice(0, limit)
+    .map(m => m.id);
 }
