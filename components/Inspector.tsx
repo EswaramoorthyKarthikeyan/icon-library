@@ -50,7 +50,7 @@ const Inspector: React.FC<InspectorProps> = ({
 
   // Path Rendering Logic (Multicolor support)
   const paths = resolvedIcon.paths || [{ d: resolvedIcon.svgPath }];
-  const globalStroke = (!customFillColor || customFillColor === 'currentColor') ? 'currentColor' : customFillColor;
+  const globalStroke = (!customFillColor || customFillColor === 'currentColor' || customFillColor === 'none') ? 'currentColor' : customFillColor;
 
   return (
     <div className="flex h-full flex-col items-center gap-6 text-center">
@@ -201,7 +201,7 @@ const Inspector: React.FC<InspectorProps> = ({
         <p className="mb-3 text-center text-[10px] font-bold uppercase tracking-[0.1em] opacity-50">
           {settings.aiEnabled ? 'Related_Concepts' : 'Category_Peers'}
         </p>
-        <div className="flex flex-wrap justify-center gap-2">
+        <div className="grid grid-cols-5 gap-2">
           <TooltipProvider>
             {(settings.aiEnabled && relatedIcons.length > 0 ? relatedIcons :
               allIcons.filter(i => i.category === icon.category && i.id !== icon.id).slice(0, 5).map(i => i.id)

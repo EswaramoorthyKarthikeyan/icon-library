@@ -10,6 +10,7 @@ import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcut
 import { useAccessibility } from './hooks/useAccessibility';
 import { useAutoSave, useRecoveryCheck, getCustomIcons, saveCustomIcon, deleteCustomIcon, getAnnotations } from './hooks/useAutoSave';
 import { useAdvancedSearch, applyFilters as applyAdvancedFilters, calculateFilterStats } from './hooks/useAdvancedSearch';
+import { ICON_LIBRARY } from './constants';
 
 // Mobile detection hook
 const useIsMobile = () => {
@@ -116,9 +117,11 @@ const App: React.FC = () => {
 	const [activeIconId, setActiveIconId] = useState<string | null>('nav-grid');
 
 	// ─── AI Features ──────────────────────────────────────────
+	const baseIcons = useMemo(() => Object.values(ICON_LIBRARY).flat(), []);
+
 	const ai = useAI({
 		settings,
-		allIcons: [], // placeholder, logic handles semantic search separately
+		allIcons: baseIcons,
 		activeIconId,
 		activeTab,
 		setActiveTab,
