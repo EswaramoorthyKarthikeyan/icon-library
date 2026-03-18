@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { IconData, ViewportSize, Weighting, IconTransform, IconAiMetadata, ViewMode } from '../types';
+import type { IconData, ViewportSize, Weighting, IconTransform, IconAiMetadata, ViewMode } from '../types';
 import { getStrokeWidth, getTransformStyle } from '../utils/svg';
 import { useArrowNavigation } from '../hooks/useArrowNavigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -26,7 +26,7 @@ interface IconGridProps {
 
 const IconGrid: React.FC<IconGridProps> = ({
   category, icons, viewportSize, weighting, transform, activeIconId, selectedIds,
-  settings, aiMetadataCache, customFillColor, annotatedIconIds = new Set(), viewMode, onPreview, onToggle, onAddToRecent
+  settings, aiMetadataCache: _aiMetadataCache, customFillColor, annotatedIconIds = new Set(), viewMode, onPreview, onToggle, onAddToRecent
 }) => {
   const sw = getStrokeWidth(weighting);
   const transformStyle = getTransformStyle(transform);
@@ -122,7 +122,7 @@ const IconGrid: React.FC<IconGridProps> = ({
               <Tooltip key={icon.id}>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={(e) => {
+                    onClick={() => {
                       onPreview(icon.id);
                       onToggle(icon.id);
                       onAddToRecent(icon.id);

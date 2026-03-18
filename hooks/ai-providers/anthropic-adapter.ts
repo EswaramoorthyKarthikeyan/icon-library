@@ -1,5 +1,5 @@
-import { IconAiMetadata, IconData } from "../../types";
-import { AIProviderAdapter } from "./types";
+import type { IconAiMetadata, IconData } from "../../types";
+import type { AIProviderAdapter } from "./types";
 
 export class AnthropicProviderAdapter implements AIProviderAdapter {
     id = "anthropic";
@@ -9,7 +9,18 @@ export class AnthropicProviderAdapter implements AIProviderAdapter {
         this.apiKey = apiKey;
     }
 
-    async generateContent({ model, systemPrompt, userPrompt }: any): Promise<any> {
+    async generateContent({ model, systemPrompt, userPrompt, signal }: {
+        model: string;
+        systemPrompt?: string;
+        userPrompt: string;
+        responseSchema?: any;
+        signal?: AbortSignal;
+    }): Promise<any> {
+        // Check if aborted before starting
+        if (signal?.aborted) {
+            throw new DOMException('Aborted', 'AbortError');
+        }
+
         const response = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
@@ -25,7 +36,8 @@ export class AnthropicProviderAdapter implements AIProviderAdapter {
                 messages: [
                     { role: "user", content: userPrompt }
                 ]
-            })
+            }),
+            signal
         });
 
         if (!response.ok) {
@@ -37,7 +49,7 @@ export class AnthropicProviderAdapter implements AIProviderAdapter {
         return data.content[0].text;
     }
 
-    async performSemanticSearch(query: string, icons: IconData[], model: string): Promise<string[]> {
+    async performSemanticSearch(query: string, icons: IconData[], model: string, options?: { signal?: AbortSignal }): Promise<string[]> {
         const iconContext = icons.slice(0, 300).map(i => ({ id: i.id, name: i.name, category: i.category }));
         const text = await this.generateContent({
             model,
@@ -45,36 +57,54 @@ export class AnthropicProviderAdapter implements AIProviderAdapter {
             User query: "${query}"
             Available Icons: ${JSON.stringify(iconContext)}
             Return ONLY a JSON object: { "matchedIds": ["id1", "id2", ...] }`,
+            signal: options?.signal
         });
 
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        const data = JSON.parse(jsonMatch ? jsonMatch[0] : text);
-        return data.matchedIds || [];
+        try {
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            const data = JSON.parse(jsonMatch ? jsonMatch[0] : text);
+            return data.matchedIds || [];
+        } catch {
+            console.error("Failed to parse semantic search response from Anthropic");
+            return [];
+        }
     }
 
-    async generateMetadata(icon: IconData, model: string): Promise<IconAiMetadata> {
+    async generateMetadata(icon: IconData, model: string, options?: { signal?: AbortSignal }): Promise<IconAiMetadata> {
         const text = await this.generateContent({
             model,
             userPrompt: `Provide professional UI design insights for the icon "${icon.name}". Generate 4-6 semantic tags and a 1-sentence usage description.
             Return ONLY a JSON object: { "tags": ["tag1", ...], "description": "..." }`,
+            signal: options?.signal
         });
 
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        return JSON.parse(jsonMatch ? jsonMatch[0] : text);
+        try {
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            return JSON.parse(jsonMatch ? jsonMatch[0] : text);
+        } catch {
+            console.error("Failed to parse metadata response from Anthropic");
+            return { tags: [], description: "No description available" };
+        }
     }
 
-    async suggestRelatedIcons(icon: IconData, allIcons: IconData[], model: string): Promise<string[]> {
+    async suggestRelatedIcons(icon: IconData, allIcons: IconData[], model: string, options?: { signal?: AbortSignal }): Promise<string[]> {
         const librarySlice = allIcons.slice(0, 100).map(i => ({ id: i.id, name: i.name }));
         const text = await this.generateContent({
             model,
             userPrompt: `Suggest 4 icon IDs from this library that are visually or conceptually related to "${icon.name}".
             Library: ${JSON.stringify(librarySlice)}
             Return ONLY a JSON object: { "relatedIds": ["id1", ...] }`,
+            signal: options?.signal
         });
 
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        const data = JSON.parse(jsonMatch ? jsonMatch[0] : text);
-        return data.relatedIds || [];
+        try {
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            const data = JSON.parse(jsonMatch ? jsonMatch[0] : text);
+            return data.relatedIds || [];
+        } catch {
+            console.error("Failed to parse related icons response from Anthropic");
+            return [];
+        }
     }
 
     async synthesizeIcons(category: string, model: string): Promise<IconData[]> {
@@ -86,14 +116,19 @@ export class AnthropicProviderAdapter implements AIProviderAdapter {
             Return ONLY a JSON object: { "newIcons": [{ "name": "...", "svgPath": "..." }, ...] }`,
         });
 
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        const data = JSON.parse(jsonMatch ? jsonMatch[0] : text);
-        return (data.newIcons || []).map((icon: any, idx: number) => ({
-            id: `gen-${category.toLowerCase()}-${Date.now()}-${idx}`,
-            name: icon.name,
-            category: category,
-            svgPath: icon.svgPath,
-            isSynthesized: true
-        }));
+        try {
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            const data = JSON.parse(jsonMatch ? jsonMatch[0] : text);
+            return (data.newIcons || []).map((icon: any, idx: number) => ({
+                id: `gen-${category.toLowerCase()}-${Date.now()}-${idx}`,
+                name: icon.name,
+                category,
+                svgPath: icon.svgPath,
+                isSynthesized: true
+            }));
+        } catch {
+            console.error("Failed to parse synthesized icons from Anthropic");
+            return [];
+        }
     }
 }

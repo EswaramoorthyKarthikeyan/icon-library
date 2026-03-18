@@ -2,8 +2,9 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Upload, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { IconData } from '../types';
-import { validateIconName, ValidationResult } from '../utils/validation';
+import type { IconData } from '../types';
+import type { ValidationResult } from '../utils/validation';
+import { validateIconName } from '../utils/validation';
 
 interface ImportZoneProps {
     onImport: (icon: IconData) => void;

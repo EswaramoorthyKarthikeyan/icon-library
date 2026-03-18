@@ -1,4 +1,4 @@
-import { IconAiMetadata, IconData } from "../../types";
+import type { IconAiMetadata, IconData } from "../../types";
 
 export interface AIProviderAdapter {
     id: string;
@@ -7,11 +7,12 @@ export interface AIProviderAdapter {
         systemPrompt?: string;
         userPrompt: string;
         responseSchema?: any;
+        signal?: AbortSignal;
     }): Promise<any>;
 
     // Feature specialized methods
-    performSemanticSearch(query: string, icons: IconData[], model: string): Promise<string[]>;
-    generateMetadata(icon: IconData, model: string): Promise<IconAiMetadata>;
-    suggestRelatedIcons(icon: IconData, allIcons: IconData[], model: string): Promise<string[]>;
+    performSemanticSearch(query: string, icons: IconData[], model: string, options?: { signal?: AbortSignal }): Promise<string[]>;
+    generateMetadata(icon: IconData, model: string, options?: { signal?: AbortSignal }): Promise<IconAiMetadata>;
+    suggestRelatedIcons(icon: IconData, allIcons: IconData[], model: string, options?: { signal?: AbortSignal }): Promise<string[]>;
     synthesizeIcons(category: string, model: string): Promise<IconData[]>;
 }

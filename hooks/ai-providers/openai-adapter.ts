@@ -1,5 +1,5 @@
-import { IconAiMetadata, IconData } from "../../types";
-import { AIProviderAdapter } from "./types";
+import type { IconAiMetadata, IconData } from "../../types";
+import type { AIProviderAdapter } from "./types";
 
 export class OpenAIProviderAdapter implements AIProviderAdapter {
     id = "openai";
@@ -9,12 +9,23 @@ export class OpenAIProviderAdapter implements AIProviderAdapter {
         this.apiKey = apiKey;
     }
 
-    async generateContent({ model, systemPrompt, userPrompt, responseSchema }: any): Promise<any> {
+    async generateContent({ model, systemPrompt, userPrompt, responseSchema, signal }: {
+        model: string;
+        systemPrompt?: string;
+        userPrompt: string;
+        responseSchema?: any;
+        signal?: AbortSignal;
+    }): Promise<any> {
+        // Check if aborted before starting
+        if (signal?.aborted) {
+            throw new DOMException('Aborted', 'AbortError');
+        }
+
         const response = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${this.apiKey}`
+                Authorization: `Bearer ${this.apiKey}`
             },
             body: JSON.stringify({
                 model,
@@ -23,7 +34,8 @@ export class OpenAIProviderAdapter implements AIProviderAdapter {
                     { role: "user", content: userPrompt }
                 ],
                 response_format: responseSchema ? { type: "json_object" } : undefined
-            })
+            }),
+            signal
         });
 
         if (!response.ok) {
@@ -35,7 +47,7 @@ export class OpenAIProviderAdapter implements AIProviderAdapter {
         return data.choices[0].message.content;
     }
 
-    async performSemanticSearch(query: string, icons: IconData[], model: string): Promise<string[]> {
+    async performSemanticSearch(query: string, icons: IconData[], model: string, options?: { signal?: AbortSignal }): Promise<string[]> {
         const iconContext = icons.slice(0, 300).map(i => ({ id: i.id, name: i.name, category: i.category }));
         const text = await this.generateContent({
             model,
@@ -43,36 +55,54 @@ export class OpenAIProviderAdapter implements AIProviderAdapter {
             User query: "${query}"
             Available Icons: ${JSON.stringify(iconContext)}
             Return JSON: { "matchedIds": ["id1", "id2", ...] }`,
-            responseSchema: true
+            responseSchema: true,
+            signal: options?.signal
         });
 
-        const data = JSON.parse(text);
-        return data.matchedIds || [];
+        try {
+            const data = JSON.parse(text);
+            return data.matchedIds || [];
+        } catch {
+            console.error("Failed to parse semantic search response from OpenAI");
+            return [];
+        }
     }
 
-    async generateMetadata(icon: IconData, model: string): Promise<IconAiMetadata> {
+    async generateMetadata(icon: IconData, model: string, options?: { signal?: AbortSignal }): Promise<IconAiMetadata> {
         const text = await this.generateContent({
             model,
             userPrompt: `Provide professional UI design insights for the icon "${icon.name}". Generate 4-6 semantic tags and a 1-sentence usage description.
             Return JSON: { "tags": ["tag1", ...], "description": "..." }`,
-            responseSchema: true
+            responseSchema: true,
+            signal: options?.signal
         });
 
-        return JSON.parse(text);
+        try {
+            return JSON.parse(text);
+        } catch {
+            console.error("Failed to parse metadata response from OpenAI");
+            return { tags: [], description: "No description available" };
+        }
     }
 
-    async suggestRelatedIcons(icon: IconData, allIcons: IconData[], model: string): Promise<string[]> {
+    async suggestRelatedIcons(icon: IconData, allIcons: IconData[], model: string, options?: { signal?: AbortSignal }): Promise<string[]> {
         const librarySlice = allIcons.slice(0, 100).map(i => ({ id: i.id, name: i.name }));
         const text = await this.generateContent({
             model,
             userPrompt: `Suggest 4 icon IDs from this library that are visually or conceptually related to "${icon.name}".
             Library: ${JSON.stringify(librarySlice)}
             Return JSON: { "relatedIds": ["id1", ...] }`,
-            responseSchema: true
+            responseSchema: true,
+            signal: options?.signal
         });
 
-        const data = JSON.parse(text);
-        return data.relatedIds || [];
+        try {
+            const data = JSON.parse(text);
+            return data.relatedIds || [];
+        } catch {
+            console.error("Failed to parse related icons response from OpenAI");
+            return [];
+        }
     }
 
     async synthesizeIcons(category: string, model: string): Promise<IconData[]> {
@@ -85,13 +115,18 @@ export class OpenAIProviderAdapter implements AIProviderAdapter {
             responseSchema: true
         });
 
-        const data = JSON.parse(text);
-        return (data.newIcons || []).map((icon: any, idx: number) => ({
-            id: `gen-${category.toLowerCase()}-${Date.now()}-${idx}`,
-            name: icon.name,
-            category: category,
-            svgPath: icon.svgPath,
-            isSynthesized: true
-        }));
+        try {
+            const data = JSON.parse(text);
+            return (data.newIcons || []).map((icon: any, idx: number) => ({
+                id: `gen-${category.toLowerCase()}-${Date.now()}-${idx}`,
+                name: icon.name,
+                category,
+                svgPath: icon.svgPath,
+                isSynthesized: true
+            }));
+        } catch {
+            console.error("Failed to parse synthesized icons from OpenAI");
+            return [];
+        }
     }
 }

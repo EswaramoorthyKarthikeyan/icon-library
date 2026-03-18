@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
-import { X, Columns, Layers, Info } from 'lucide-react';
+import { X, Columns, Layers } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { IconData, ViewportSize, Weighting } from '../types';
+import type { IconData, ViewportSize, Weighting } from '../types';
 import { getStrokeWidth } from '../utils/svg';
 
 interface ComparisonToolProps {

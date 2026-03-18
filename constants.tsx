@@ -1,8 +1,10 @@
 
-import { IconData } from './types';
+import type { IconData } from './types';
+import { EXTENDED_LIBRARY } from './extendedIcons';
 
 export const ICON_LIBRARY: Record<string, IconData[]> = {
-  "UI_Actions": [
+  ...EXTENDED_LIBRARY,
+  UI_Actions: [
     { id: "ui-home", name: "home", category: "UI_Actions", svgPath: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" },
     { id: "ui-search", name: "search", category: "UI_Actions", svgPath: "M21 21l-5.197-5.197M16 10a6 6 0 11-12 0 6 6 0 0112 0z" },
     { id: "ui-settings", name: "settings", category: "UI_Actions", svgPath: "M10.325 4.317a1.724 1.724 0 013.35 0l.15.455a1.724 1.724 0 002.573.944l.39-.262a1.724 1.724 0 012.37 2.37l-.263.39a1.724 1.724 0 00.944 2.573l.455.15a1.724 1.724 0 010 3.35l-.455.15a1.724 1.724 0 00-.944 2.573l.262.39a1.724 1.724 0 01-2.37 2.37l-.39-.263a1.724 1.724 0 00-2.573.944l-.15.455a1.724 1.724 0 01-3.35 0l-.15-.455a1.724 1.724 0 00-2.573-.944l-.39.262a1.724 1.724 0 01-2.37-2.37l.263-.39a1.724 1.724 0 00-.944-2.573l-.455-.15a1.724 1.724 0 010-3.35l.455-.15a1.724 1.724 0 00.944-2.573l-.262-.39a1.724 1.724 0 012.37-2.37l.39.263a1.724 1.724 0 002.573-.944l.15-.455zM15 12a3 3 0 11-6 0 3 3 0 016 0z" },
@@ -27,10 +29,19 @@ export const ICON_LIBRARY: Record<string, IconData[]> = {
     { id: "ui-log-out", name: "log_out", category: "UI_Actions", svgPath: "M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" },
     { id: "ui-zap", name: "zap", category: "UI_Actions", svgPath: "M13 2L3 14h9l-1 8 10-12h-9l1-8z" },
     { id: "ui-command", name: "command", category: "UI_Actions", svgPath: "M18 3a3 3 0 00-3 3v12a3 3 0 003 3 3 3 0 003-3 3 3 0 00-3-3H6a3 3 0 00-3 3 3 3 0 003 3 3 3 0 003-3V6a3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3h12a3 3 0 003-3 3 3 0 00-3-3z" },
-    { id: "ui-more-h", name: "more_horizontal", category: "UI_Actions", svgPath: "M12 13a1 1 0 100-2 1 1 0 000 2zm7 0a1 1 0 100-2 1 1 0 000 2zM5 13a1 1 0 100-2 1 1 0 000 2z" }
+    { id: "ui-more-h", name: "more_horizontal", category: "UI_Actions", svgPath: "M12 13a1 1 0 100-2 1 1 0 000 2zm7 0a1 1 0 100-2 1 1 0 000 2zM5 13a1 1 0 100-2 1 1 0 000 2z" },
+    { id: "ui-arrow-up", name: "arrow_up", category: "UI_Actions", svgPath: "M12 19V5M5 12l7-7 7 7" },
+    { id: "ui-arrow-down", name: "arrow_down", category: "UI_Actions", svgPath: "M12 5v14M19 12l-7 7-7-7" },
+    { id: "ui-arrow-left", name: "arrow_left", category: "UI_Actions", svgPath: "M19 12H5M12 19l-7-7 7-7" },
+    { id: "ui-arrow-right", name: "arrow_right", category: "UI_Actions", svgPath: "M5 12h14M12 5l7 7-7 7" },
+    { id: "ui-lock", name: "lock", category: "UI_Actions", svgPath: "M19 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2zm-7 6v-2M7 11V7a5 5 0 0110 0v4" },
+    { id: "ui-unlock", name: "unlock", category: "UI_Actions", svgPath: "M19 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2zM7 11V7a5 5 0 019.9-1" },
+    { id: "ui-user", name: "user", category: "UI_Actions", svgPath: "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" },
+    { id: "ui-heart", name: "heart", category: "UI_Actions", svgPath: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" },
+    { id: "ui-star", name: "star", category: "UI_Actions", svgPath: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" }
   ],
 
-  "Media": [
+  Media: [
     { id: "med-play", name: "play", category: "Media", svgPath: "M5 3l14 9-14 9V3z" },
     { id: "med-pause", name: "pause", category: "Media", svgPath: "M6 4h4v16H6V4zm8 0h4v16h-4V4z" },
     { id: "med-stop", name: "stop", category: "Media", svgPath: "M6 4h12v16H6V4z" },
@@ -50,10 +61,12 @@ export const ICON_LIBRARY: Record<string, IconData[]> = {
     { id: "med-screen", name: "screencast", category: "Media", svgPath: "M2 16.1A5 5 0 015.9 20M2 12.05A9 9 0 019.95 20M2 8V6a2 2 0 012-2h16a2 2 0 012 2v12a2 2 0 01-2 2h-6M2 20h.01" },
     { id: "med-airplay", name: "airplay", category: "Media", svgPath: "M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-1M12 15l5 6H7l5-6z" },
     { id: "med-disc", name: "disc", category: "Media", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 15a3 3 0 100-6 3 3 0 000 6z" },
-    { id: "med-shuffle", name: "shuffle", category: "Media", svgPath: "M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" }
+    { id: "med-shuffle", name: "shuffle", category: "Media", svgPath: "M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" },
+    { id: "med-repeat", name: "repeat", category: "Media", svgPath: "M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3" },
+    { id: "med-sliders", name: "sliders", category: "Media", svgPath: "M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" }
   ],
 
-  "Files": [
+  Files: [
     { id: "fil-file", name: "file", category: "Files", svgPath: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6" },
     { id: "fil-folder", name: "folder", category: "Files", svgPath: "M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2v11z" },
     { id: "fil-folder-open", name: "folder_open", category: "Files", svgPath: "M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2l1-5a2 2 0 00-2-2H7a2 2 0 00-2 2l-1 5z" },
@@ -76,7 +89,7 @@ export const ICON_LIBRARY: Record<string, IconData[]> = {
     { id: "fil-layers", name: "layers", category: "Files", svgPath: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" }
   ],
 
-  "Devices": [
+  Devices: [
     { id: "dev-monitor", name: "monitor", category: "Devices", svgPath: "M2 3h20v14H2V3zm6 18h8M12 17v4" },
     { id: "dev-smartphone", name: "smartphone", category: "Devices", svgPath: "M6 2h12a2 2 0 012 2v16a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm6 17h.01" },
     { id: "dev-tablet", name: "tablet", category: "Devices", svgPath: "M5 2h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V4a2 2 0 012-2zm7 17h.01" },
@@ -91,10 +104,14 @@ export const ICON_LIBRARY: Record<string, IconData[]> = {
     { id: "dev-usb", name: "usb", category: "Devices", svgPath: "M12 22V8M12 2l4 4H8l4-4zM6 12a2 2 0 100 4 2 2 0 000-4zm0 2h6m6-2v4h-2v-4h2z" },
     { id: "dev-router", name: "router", category: "Devices", svgPath: "M2 14h20v6H2v-6zm4 3h.01M4 14l3-5M20 14l-3-5M12 4v5" },
     { id: "dev-gamepad", name: "gamepad", category: "Devices", svgPath: "M6 11h4M8 9v4M15 12h.01M18 10h.01M17.32 5H6.68a4 4 0 00-3.978 3.59C2.19 12.327 2 16.261 2 17a3 3 0 006 0l1-3h6l1 3a3 3 0 006 0c0-.74-.19-4.673-.702-8.41A4 4 0 0017.32 5z" },
-    { id: "dev-camera-device", name: "webcam", category: "Devices", svgPath: "M12 16a4 4 0 100-8 4 4 0 000 8zM12 16v4M8 22h8" }
+    { id: "dev-camera-device", name: "webcam", category: "Devices", svgPath: "M12 16a4 4 0 100-8 4 4 0 000 8zM12 16v4M8 22h8" },
+    { id: "dev-battery", name: "battery", category: "Devices", svgPath: "M16 11V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M22 11v2" },
+    { id: "dev-battery-charge", name: "battery_charging", category: "Devices", svgPath: "M5 18H3a2 2 0 01-2-2V8a2 2 0 012-2h3.19M15 6h2a2 2 0 012 2v8a2 2 0 01-2 2h-3.19M23 13v-2M11 6l-4 6h6l-4 6" },
+    { id: "dev-cpu", name: "cpu", category: "Devices", svgPath: "M4 4h16v16H4V4zM9 9h6v6H9V9zM9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3" },
+    { id: "dev-server", name: "server", category: "Devices", svgPath: "M2 4a2 2 0 012-2h16a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2V4zm0 12a2 2 0 012-2h16a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4zm4-10h.01M6 18h.01" }
   ],
 
-  "Communication": [
+  Communication: [
     { id: "com-mail", name: "mail", category: "Communication", svgPath: "M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2l8 5 8-5" },
     { id: "com-send", name: "send", category: "Communication", svgPath: "M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" },
     { id: "com-chat", name: "chat_bubble", category: "Communication", svgPath: "M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" },
@@ -114,10 +131,12 @@ export const ICON_LIBRARY: Record<string, IconData[]> = {
     { id: "com-inbox-full", name: "inbox_full", category: "Communication", svgPath: "M22 12h-6l-2 3H10l-2-3H2M2 12v8a2 2 0 002 2h16a2 2 0 002-2v-8M7 2h10l4 10H3L7 2z" },
     { id: "com-message-sq", name: "message_square", category: "Communication", svgPath: "M21 3H3v14h7l4 4 4-4h3V3z" },
     { id: "com-hash", name: "hash", category: "Communication", svgPath: "M4 9h16M4 15h16M10 3l-2 18M16 3l-2 18" },
-    { id: "com-signal", name: "signal", category: "Communication", svgPath: "M2 20h.01M7 20v-4M12 20v-8M17 20V8M22 20V4" }
+    { id: "com-signal", name: "signal", category: "Communication", svgPath: "M2 20h.01M7 20v-4M12 20v-8M17 20V8M22 20V4" },
+    { id: "com-mic-off", name: "mic_off", category: "Communication", svgPath: "M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM1 1l22 22" },
+    { id: "com-video-off", name: "video_off", category: "Communication", svgPath: "M15.2 3H4a2 2 0 00-2 2v14a2 2 0 002 2h11.2a2 2 0 002-2V5a2 2 0 00-2-2zM21.8 7.5l-4.6 3v3l4.6 3V7.5zM1 1l22 22" }
   ],
 
-  "Navigation": [
+  Navigation: [
     { id: "nav-compass", name: "compass", category: "Navigation", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" },
     { id: "nav-map", name: "map", category: "Navigation", svgPath: "M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4zM8 2v16M16 6v16" },
     { id: "nav-globe", name: "globe", category: "Navigation", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" },
@@ -137,10 +156,13 @@ export const ICON_LIBRARY: Record<string, IconData[]> = {
     { id: "nav-panel-right", name: "panel_right", category: "Navigation", svgPath: "M3 3h18v18H3V3zm13 0v18" },
     { id: "nav-breadcrumb", name: "breadcrumb", category: "Navigation", svgPath: "M3 12h2M9 12h2M15 12h2M6 8l4 4-4 4M12 8l4 4-4 4M18 8l4 4-4 4" },
     { id: "nav-home-alt", name: "home_alt", category: "Navigation", svgPath: "M3 12l9-9 9 9M5 10v10h14V10" },
-    { id: "nav-sitemap", name: "sitemap", category: "Navigation", svgPath: "M12 2v8M4 14v6h6v-6H4zm10 0v6h6v-6h-6zM7 14v-4h10v4M12 10v4" }
+    { id: "nav-sitemap", name: "sitemap", category: "Navigation", svgPath: "M12 2v8M4 14v6h6v-6H4zm10 0v6h6v-6h-6zM7 14v-4h10v4M12 10v4" },
+    { id: "nav-anchor", name: "anchor", category: "Navigation", svgPath: "M12 22V8M5 12H2a10 10 0 0020 0h-3M12 8a3 3 0 100-6 3 3 0 000 6z" },
+    { id: "nav-navigation", name: "navigation", category: "Navigation", svgPath: "M3 11l19-9-9 19-2-8-8-2z" },
+    { id: "nav-target", name: "target", category: "Navigation", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 16a4 4 0 100-8 4 4 0 000 8zM12 12h.01" }
   ],
 
-  "Alerts": [
+  Alerts: [
     { id: "alt-alert-tri", name: "alert_triangle", category: "Alerts", svgPath: "M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" },
     { id: "alt-alert-circle", name: "alert_circle", category: "Alerts", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 8v4M12 16h.01" },
     { id: "alt-info", name: "info", category: "Alerts", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 16v-4M12 8h.01" },
@@ -155,10 +177,13 @@ export const ICON_LIBRARY: Record<string, IconData[]> = {
     { id: "alt-ban", name: "ban", category: "Alerts", svgPath: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM4.93 4.93l14.14 14.14" },
     { id: "alt-alert-oct", name: "alert_octagon", category: "Alerts", svgPath: "M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86L7.86 2zM12 8v4M12 16h.01" },
     { id: "alt-flame", name: "flame", category: "Alerts", svgPath: "M12 22c4-2 8-6 8-11a8 8 0 00-16 0c0 5 4 9 8 11zM12 22c-2-1-4-3-4-6a4 4 0 018 0c0 3-2 5-4 6z" },
-    { id: "alt-urgent", name: "urgent", category: "Alerts", svgPath: "M12 3v12M12 21h.01M4 8l2 1M20 8l-2 1" }
+    { id: "alt-urgent", name: "urgent", category: "Alerts", svgPath: "M12 3v12M12 21h.01M4 8l2 1M20 8l-2 1" },
+    { id: "alt-bell-plus", name: "notification_add", category: "Alerts", svgPath: "M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0M15 3h6M18 0v6" },
+    { id: "alt-shield-check", name: "shield_check", category: "Alerts", svgPath: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" },
+    { id: "alt-shield-off", name: "shield_off", category: "Alerts", svgPath: "M19.69 14a6.9 6.9 0 00.31-2V5l-8-3-3.16 1.18M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 005.62-4.38M1 1l22 22" }
   ],
 
-  "Commerce": [
+  Commerce: [
     { id: "ecom-cart", name: "shopping_cart", category: "Commerce", svgPath: "M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6M9 22a1 1 0 100-2 1 1 0 000 2zm11 0a1 1 0 100-2 1 1 0 000 2z" },
     { id: "ecom-bag", name: "shopping_bag", category: "Commerce", svgPath: "M6 2l-2 5v13a2 2 0 002 2h12a2 2 0 002-2V7l-2-5H6zM3 7h18M16 10a4 4 0 01-8 0" },
     { id: "ecom-tag", name: "tag", category: "Commerce", svgPath: "M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82zM7 7h.01" },
@@ -178,10 +203,12 @@ export const ICON_LIBRARY: Record<string, IconData[]> = {
     { id: "ecom-coupon", name: "coupon", category: "Commerce", svgPath: "M2 6h20v4a2 2 0 100 4v4H2v-4a2 2 0 100-4V6zM10 6v12" },
     { id: "ecom-handshake", name: "handshake", category: "Commerce", svgPath: "M2 14l5 5 4-4M22 14l-5 5-4-4M9 10l2 2 4-4M2 10h5M17 10h5" },
     { id: "ecom-award", name: "award", category: "Commerce", svgPath: "M12 15a7 7 0 100-14 7 7 0 000 14zM8.21 13.89L7 23l5-3 5 3-1.21-9.12" },
-    { id: "ecom-qr", name: "qr_code", category: "Commerce", svgPath: "M3 3h6v6H3V3zm12 0h6v6h-6V3zM3 15h6v6H3v-6zM15 15h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2z" }
+    { id: "ecom-qr", name: "qr_code", category: "Commerce", svgPath: "M3 3h6v6H3V3zm12 0h6v6h-6V3zM3 15h6v6H3v-6zM15 15h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2z" },
+    { id: "ecom-cart-plus", name: "cart_add", category: "Commerce", svgPath: "M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6M9 22a1 1 0 100-2 1 1 0 000 2zm11 0a1 1 0 100-2 1 1 0 000 2zM12 9v6M9 12h6" },
+    { id: "ecom-card-secure", name: "card_secure", category: "Commerce", svgPath: "M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zM2 10h20M12 15a3 3 0 100-6 3 3 0 000 6z" }
   ],
 
-  "Weather": [
+  Weather: [
     { id: "wea-sun", name: "sun", category: "Weather", svgPath: "M12 17a5 5 0 100-10 5 5 0 000 10zM12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" },
     { id: "wea-moon", name: "moon", category: "Weather", svgPath: "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" },
     { id: "wea-cloud", name: "cloud", category: "Weather", svgPath: "M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" },
@@ -196,10 +223,12 @@ export const ICON_LIBRARY: Record<string, IconData[]> = {
     { id: "wea-sunset", name: "sunset", category: "Weather", svgPath: "M17 18a5 5 0 00-10 0M12 9v7M4.22 10.22l1.42 1.42M1 18h2M21 18h2M18.36 11.64l1.42-1.42M23 22H1M16 5l-4 4-4-4" },
     { id: "wea-cloudy", name: "cloudy", category: "Weather", svgPath: "M12 2v2M4.93 4.93l1.41 1.41M20 12h2M17.66 17.66l1.41 1.41M2 12h2M6.34 17.66l-1.41 1.41M12 20v2M17.07 4.93l1.41-1.41M17 12a5 5 0 01-10 0" },
     { id: "wea-fog", name: "fog", category: "Weather", svgPath: "M20 12A8.94 8.94 0 0012 8 8.94 8.94 0 004 12M3 16h18M5 20h14" },
-    { id: "wea-droplet", name: "droplet", category: "Weather", svgPath: "M12 2.69l5.66 5.66a8 8 0 11-11.31 0L12 2.69z" }
+    { id: "wea-droplet", name: "droplet", category: "Weather", svgPath: "M12 2.69l5.66 5.66a8 8 0 11-11.31 0L12 2.69z" },
+    { id: "wea-tornado", name: "tornado", category: "Weather", svgPath: "M2 12h20M4 16h16M7 20h10M4 8h16M7 4h10" },
+    { id: "wea-cloud-lighting", name: "cloud_lightning", category: "Weather", svgPath: "M19 16.9A5 5 0 0018 7h-1.26a8 8 0 10-11.62 9M13 11l-4 6h6l-4 6" }
   ],
 
-  "Social": [
+  Social: [
     { id: "soc-heart", name: "heart", category: "Social", svgPath: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" },
     { id: "soc-star", name: "star", category: "Social", svgPath: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
     { id: "soc-thumbs-up", name: "thumbs_up", category: "Social", svgPath: "M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3" },
@@ -214,10 +243,14 @@ export const ICON_LIBRARY: Record<string, IconData[]> = {
     { id: "soc-crown", name: "crown", category: "Social", svgPath: "M2 18l3-12 5 6 2-8 2 8 5-6 3 12H2z" },
     { id: "soc-gem", name: "gem", category: "Social", svgPath: "M6 3h12l4 6-10 13L2 9l4-6zM2 9h20M12 22L8 9M12 22l4-13M8 3l-2 6M16 3l2 6M12 3v6" },
     { id: "soc-medal", name: "medal", category: "Social", svgPath: "M12 17a5 5 0 100-10 5 5 0 000 10zM8.21 13.89L7 23l5-3 5 3-1.21-9.11" },
-    { id: "soc-fire", name: "fire", category: "Social", svgPath: "M12 22c4.418 0 8-3.582 8-8 0-3.5-2-6.5-4-8-.5 2-2 3-4 3s-3.5-1-4-3c-2 1.5-4 4.5-4 8 0 4.418 3.582 8 8 8z" }
+    { id: "soc-fire", name: "fire", category: "Social", svgPath: "M12 22c4.418 0 8-3.582 8-8 0-3.5-2-6.5-4-8-.5 2-2 3-4 3s-3.5-1-4-3c-2 1.5-4 4.5-4 8 0 4.418 3.582 8 8 8z" },
+    { id: "soc-twitter", name: "twitter", category: "Social", svgPath: "M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" },
+    { id: "soc-github", name: "github", category: "Social", svgPath: "M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22" },
+    { id: "soc-linkedin", name: "linkedin", category: "Social", svgPath: "M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 6a2 2 0 100-4 2 2 0 000 4z" },
+    { id: "soc-instagram", name: "instagram", category: "Social", svgPath: "M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zM17.5 6.5h.01M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" }
   ],
 
-  "Editing": [
+  Editing: [
     { id: "edt-pen", name: "pen_tool", category: "Editing", svgPath: "M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586M11 13a2 2 0 100-4 2 2 0 000 4z" },
     { id: "edt-pencil", name: "pencil", category: "Editing", svgPath: "M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" },
     { id: "edt-eraser", name: "eraser", category: "Editing", svgPath: "M21 21H10L3.29 14.29a1 1 0 010-1.41l9.59-9.59a1 1 0 011.41 0l8.42 8.42a1 1 0 010 1.41L16 20M10 21h11" },
@@ -237,10 +270,13 @@ export const ICON_LIBRARY: Record<string, IconData[]> = {
     { id: "edt-rotate-ccw", name: "rotate_counter", category: "Editing", svgPath: "M3 2v6h6M3 13a9 9 0 103-7.7L3 8" },
     { id: "edt-palette", name: "palette", category: "Editing", svgPath: "M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10c1.1 0 2-.9 2-2 0-.51-.2-1-.52-1.36-.31-.35-.48-.82-.48-1.14 0-1.1.9-2 2-2h2.36c3.07 0 5.64-2.57 5.64-5.64C22 6.04 17.52 2 12 2zM5.5 12a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm3-4a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm7 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm3 4a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" },
     { id: "edt-dropper", name: "eyedropper", category: "Editing", svgPath: "M2 22l1-1h3l9-9M12 3l4 4M3 21l9-9m6.54-6.54a3 3 0 00-4.24 0L12 7.76l4.24 4.24 2.3-2.3a3 3 0 000-4.24z" },
-    { id: "edt-highlight", name: "highlight", category: "Editing", svgPath: "M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" }
+    { id: "edt-highlight", name: "highlight", category: "Editing", svgPath: "M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" },
+    { id: "edt-pie-chart", name: "pie_chart", category: "Editing", svgPath: "M21.21 15.89A10 10 0 118 2.83M22 12A10 10 0 0012 2v10z" },
+    { id: "edt-bar-chart", name: "bar_chart", category: "Editing", svgPath: "M18 20V10M12 20V4M6 20v-4" },
+    { id: "edt-activity", name: "activity", category: "Editing", svgPath: "M22 12h-4l-3 9L9 3l-3 9H2" }
   ],
 
-  "Arrows": [
+  Arrows: [
     { id: "arr-up", name: "arrow_up", category: "Arrows", svgPath: "M12 19V5m0 0l-7 7m7-7l7 7" },
     { id: "arr-down", name: "arrow_down", category: "Arrows", svgPath: "M12 5v14m0 0l7-7m-7 7l-7-7" },
     { id: "arr-left", name: "arrow_left", category: "Arrows", svgPath: "M19 12H5m0 0l7 7m-7-7l7-7" },

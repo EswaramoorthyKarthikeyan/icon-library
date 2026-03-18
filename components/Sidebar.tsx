@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { SearchIcon, Repeat, Eye, PanelsTopLeft, Package, Sparkles, Trash, Clock, Filter, Upload } from 'lucide-react';
-import { ViewportSize, Weighting, Collection, IconTransform, IconData } from '../types.ts';
+import { SearchIcon, Repeat, Package, Trash, Clock, Filter } from 'lucide-react';
+import type { ViewportSize, Weighting, Collection, IconTransform, IconData } from '../types.ts';
 import { ICON_LIBRARY } from '../constants.tsx';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -114,7 +114,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   key={size}
                   onClick={() => setViewportSize(size as ViewportSize)}
                   aria-label={`Set viewport size to ${size} pixels`}
-                  area-pressed={viewportSize === size}
+                  aria-pressed={viewportSize === size}
                   className={`flex-1 rounded-[4px] py-1.5 text-[10px] font-bold transition-all ${viewportSize === size
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-muted-foreground hover:bg-muted'
@@ -255,7 +255,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Navigation */}
         <div className="mb-6 space-y-1">
           <button
-            onClick={() => { setSelectedCategory(null); setActiveCollectionId(null); }}
+            onClick={() => { setSelectedCategory(null); setActiveCollectionId(null); setSearchQuery(''); }}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${!selectedCategory && !activeCollectionId ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
               }`}
           >
@@ -268,7 +268,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             {Object.keys(ICON_LIBRARY).map(cat => (
               <button
                 key={cat}
-                onClick={() => { setSelectedCategory(cat); setActiveCollectionId(null); }}
+                onClick={() => { setSelectedCategory(cat); setActiveCollectionId(null); setSearchQuery(''); }}
                 className={`block w-full rounded-md px-3 py-1.5 text-left text-xs uppercase tracking-wide transition-colors ${selectedCategory === cat ? 'bg-accent text-accent-foreground font-semibold border-l-2 border-primary pl-2.5' : 'text-muted-foreground hover:bg-accent/50'
                   }`}
               >
@@ -283,7 +283,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               {collections.map(col => (
                 <div key={col.id} className="group flex items-center gap-1 px-1">
                   <button
-                    onClick={() => { setActiveCollectionId(col.id); setSelectedCategory(null); }}
+                    onClick={() => { setActiveCollectionId(col.id); setSelectedCategory(null); setSearchQuery(''); }}
                     className={`flex-1 rounded-md px-2 py-1.5 text-left text-xs uppercase tracking-wide transition-colors ${activeCollectionId === col.id ? 'bg-primary/10 text-primary font-bold border-l-2 border-primary pl-1.5' : 'text-muted-foreground hover:bg-accent/50'
                       }`}
                   >
@@ -351,4 +351,5 @@ const Sidebar: React.FC<SidebarProps> = ({
     </div>
   );
 };
-export default Sidebar;
+
+export default React.memo(Sidebar);

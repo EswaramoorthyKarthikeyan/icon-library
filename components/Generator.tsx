@@ -1,13 +1,10 @@
-
 import React, { useState } from 'react';
 import { createAIClient, withBackoff, isRateLimitError } from '../utils/api';
 import { ICON_LIBRARY } from '../constants.tsx';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 // using regular textarea below
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Zap, AlertTriangle, RefreshCw, Plus, LayoutGrid } from 'lucide-react';
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Loader2, AlertTriangle, RefreshCw, LayoutGrid } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Generator: React.FC = () => {
@@ -24,7 +21,11 @@ const Generator: React.FC = () => {
 
   const generateImage = async (query: string): Promise<string | null> => {
     return await withBackoff(async () => {
-      const ai = createAIClient("DEMO_KEY"); // Fallback for reference generator
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("Gemini API key not configured. Please set VITE_GEMINI_API_KEY in your environment.");
+      }
+      const ai = createAIClient(apiKey);
       const model = ai.getGenerativeModel({
         model: 'gemini-2.0-flash',
       });
@@ -39,7 +40,7 @@ const Generator: React.FC = () => {
       });
 
       const part = result.response.candidates?.[0].content.parts.find((p: any) => p.inlineData);
-      if (part) {
+      if (part?.inlineData) {
         return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
       }
       return null;
@@ -233,7 +234,7 @@ const Generator: React.FC = () => {
 
           <div className="mt-6 rounded-lg border border-dashed p-4 text-center">
             <span className="font-mono text-xs uppercase text-muted-foreground">
-              Synthesized assets are reference only. Use the "Realize Concept" engine for specific modifications.
+              Synthesized assets are reference only. Use the &quot;Realize Concept&quot; engine for specific modifications.
             </span>
           </div>
         </div>

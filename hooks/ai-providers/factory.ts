@@ -1,9 +1,9 @@
-import { AppSettings, AIProviderId } from "../../types";
+import type { AppSettings, AIProviderId } from "../../types";
 import { AnthropicProviderAdapter } from "./anthropic-adapter";
 import { GoogleProviderAdapter } from "./google-adapter";
 import { OpenAIProviderAdapter } from "./openai-adapter";
 import { LocalProviderAdapter } from "./local-adapter";
-import { AIProviderAdapter } from "./types";
+import type { AIProviderAdapter } from "./types";
 
 export const getAIProvider = (settings: AppSettings): AIProviderAdapter | null => {
     const activeId = settings.activeProvider;

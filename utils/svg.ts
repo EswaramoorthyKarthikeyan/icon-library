@@ -1,5 +1,5 @@
-import React from "react";
-import { Weighting, IconTransform, IconData, MultiPath } from "../types";
+import type React from "react";
+import type { Weighting, IconTransform, IconData, MultiPath } from "../types";
 
 /**
  * Maps a stroke weighting name to its numeric SVG stroke-width value.
@@ -17,6 +17,7 @@ export const getStrokeWidth = (weighting: Weighting): number => {
 
 /**
  * Generates inline CSS transform style from an IconTransform object.
+ * Memoize this function's output in components to avoid recreating on every render.
  */
 export const getTransformStyle = (
     transform: IconTransform
@@ -48,6 +49,37 @@ export const resolveIconState = (icon: IconData, state?: 'hover' | 'active' | 'd
 };
 
 /**
+ * Sanitizes a string to be used as a valid JavaScript/React component name.
+ * Only allows alphanumeric characters and capitalizes the first letter.
+ */
+const sanitizeComponentName = (name: string): string => {
+    return name
+        .split(/[-_]+/)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+        .join('')
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .replace(/^([a-z])/, (_, c) => c.toUpperCase()) || 'Icon';
+};
+
+/**
+ * Creates a complete MultiPath fallback object with all required fields.
+ */
+const createMultiPathFallback = (svgPath: string): MultiPath => ({
+    d: svgPath,
+    color: undefined,
+    opacity: undefined,
+    className: undefined
+});
+
+/**
+ * Resolves the fill/stroke color, using nullish coalescing to handle empty strings.
+ */
+export const resolveFillColor = (pathColor: string | undefined, globalColor: string): string => {
+    // Use nullish coalescing to only fall back for null/undefined, not empty strings
+    return pathColor ?? globalColor;
+};
+
+/**
  * Builds a complete SVG string for an icon, suitable for file export.
  */
 export const buildSvgContent = (
@@ -61,14 +93,24 @@ export const buildSvgContent = (
     const sw = getStrokeWidth(weighting);
     const transformAttr = getSvgTransformAttr(transform);
     
-    const globalStroke = (!customFillColor || customFillColor === 'currentColor') ? 'currentColor' : customFillColor;
+    const globalStroke = (!customFillColor || customFillColor === 'currentColor') 
+        ? 'currentColor' 
+        : customFillColor;
 
-    const paths = resolvedIcon.paths || [{ d: resolvedIcon.svgPath }];
+    const paths = resolvedIcon.paths 
+        ? resolvedIcon.paths.map(p => ({
+            d: p.d,
+            color: p.color,
+            opacity: p.opacity,
+            className: p.className
+        }))
+        : [createMultiPathFallback(resolvedIcon.svgPath)];
     
     const pathElements = paths.map(p => {
-        const stroke = p.color || globalStroke;
+        const stroke = resolveFillColor(p.color, globalStroke);
         const opacity = p.opacity ?? 1;
-        return `<path d="${p.d}" stroke="${stroke}" stroke-opacity="${opacity}" />`;
+        const escapedPath = p.d.replace(/"/g, '&quot;');
+        return `<path d="${escapedPath}" stroke="${stroke}" stroke-opacity="${opacity}" />`;
     }).join('\n  ');
 
     return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">
@@ -80,22 +122,32 @@ export const buildSvgContent = (
 
 /**
  * Builds a React Component (JSX/TSX) string.
+ * Component names are sanitized to prevent code injection.
  */
 export const buildJsxContent = (
     icon: IconData,
     weighting: Weighting,
 ): string => {
     const sw = getStrokeWidth(weighting);
-    const componentName = icon.name
-        .split(/[-_]+/)
-        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-        .join('') + 'Icon';
+    // Sanitize the component name to prevent injection attacks
+    const componentName = sanitizeComponentName(icon.name) + 'Icon';
 
-    const paths = icon.paths || [{ d: icon.svgPath }];
+    const paths = icon.paths 
+        ? icon.paths.map(p => ({
+            d: p.d,
+            color: p.color,
+            opacity: p.opacity
+        }))
+        : [createMultiPathFallback(icon.svgPath)];
+    
     const jsxPaths = paths.map(p => {
-        const color = p.color ? `"${p.color}"` : 'stroke || "currentColor"';
+        // Handle static vs dynamic colors
+        const color = p.color 
+            ? `"${p.color.replace(/"/g, '&quot;')}"` 
+            : 'stroke ?? "currentColor"';
         const opacity = p.opacity !== undefined ? ` strokeOpacity={${p.opacity}}` : '';
-        return `<path d="${p.d}" stroke={${color}}${opacity} />`;
+        const escapedPath = p.d.replace(/"/g, '&quot;');
+        return `<path d="${escapedPath}" stroke={${color}}${opacity} />`;
     }).join('\n    ');
 
     return `import * as React from "react"
@@ -107,7 +159,7 @@ export const ${componentName} = ({ stroke, ...props }: React.SVGProps<SVGSVGElem
     height="24"
     viewBox="0 0 24 24"
     fill="none"
-    strokeWidth="${sw}"
+    strokeWidth={${sw}}
     strokeLinecap="round"
     strokeLinejoin="round"
     {...props}

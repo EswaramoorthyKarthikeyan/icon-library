@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { PencilLine, Check } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { getAnnotations, saveAnnotation, IconAnnotation } from '../hooks/useAutoSave';
+import { getAnnotations, saveAnnotation } from '../hooks/useAutoSave';
 
 interface IconAnnotationsProps {
   iconId: string;
@@ -88,7 +88,7 @@ const IconAnnotations: React.FC<IconAnnotationsProps> = ({ iconId }) => {
             className="w-full min-h-[100px] bg-muted/30 border rounded-lg p-3 text-sm resize-y focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-muted-foreground/50"
           />
           {isSaving && (
-            <div className="absolute bottom-3 right-3 flex items-center gap-1 text-[9px] uppercase font-bold text-green-500 opacity-80">
+            <div aria-live="polite" className="absolute bottom-3 right-3 flex items-center gap-1 text-[9px] uppercase font-bold text-green-500 opacity-80">
               <Check className="h-3 w-3" />
               Saved
             </div>

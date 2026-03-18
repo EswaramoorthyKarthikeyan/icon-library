@@ -44,7 +44,7 @@ export const validateIconName = (name: string, existingNames: string[] = []): Va
     return { 
       isValid: false, 
       error: 'Name must be in kebab-case (lowercase, alphanumeric, hyphens)',
-      suggestion: suggestion
+      suggestion
     };
   }
 

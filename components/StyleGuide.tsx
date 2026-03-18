@@ -1,11 +1,9 @@
-import React, { useMemo } from 'react';
-import { IconData, AppSettings, Weighting } from '../types';
+import React from 'react';
+import type { IconData, AppSettings, Weighting } from '../types';
 import { getStrokeWidth } from '../utils/svg';
 import { Download, Library, Type, Palette } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import JSZip from 'jszip';
 
 interface StyleGuideProps {
   icons: IconData[];

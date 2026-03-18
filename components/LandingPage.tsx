@@ -1,7 +1,8 @@
 import React from 'react';
-import { motion, Variants } from 'framer-motion';
+import type { Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Layers, Palette, MousePointer2, ArrowRight, History, UploadCloud, CheckCircle2, SplitSquareHorizontal, MessageSquareText, BookOpen, Keyboard } from 'lucide-react';
+import { Sparkles, Layers, MousePointer2, ArrowRight, History, UploadCloud, CheckCircle2, SplitSquareHorizontal } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const navVariants: Variants = {

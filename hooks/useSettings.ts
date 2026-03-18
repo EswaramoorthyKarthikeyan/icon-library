@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import {
+import type {
     AppSettings,
     AppTheme,
     Collection,
@@ -235,6 +235,8 @@ export const useSettings = () => {
             mediaQuery.addEventListener("change", handleChange);
             return () => mediaQuery.removeEventListener("change", handleChange);
         }
+        // Return empty cleanup function for non-system themes
+        return () => {};
     }, [vs.theme, vs.accentColor]);
 
     return {

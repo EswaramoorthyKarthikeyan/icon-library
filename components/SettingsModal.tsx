@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { AppSettings, AIProviderId } from '../types';
-import { validateProviderKey } from '../hooks/ai-providers/factory';
+import type { AppSettings, AIProviderId } from '../types';
 import {
   Dialog,
   DialogContent,

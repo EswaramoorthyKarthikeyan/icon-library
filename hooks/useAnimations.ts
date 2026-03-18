@@ -89,10 +89,6 @@ export const ANIMATION_TYPES: AnimationType[] = [
   'spin', 'bounce', 'pulse', 'fade', 'slide', 'flip', 'jiggle', 'heartbeat',
 ];
 
-const TIMING_FUNCTIONS: TimingFunction[] = [
-  'ease', 'ease-in', 'ease-out', 'ease-in-out', 'linear'
-];
-
 /**
  * Generate CSS keyframes for a given animation type
  */

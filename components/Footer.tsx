@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppTheme } from '../types';
+import type { AppTheme } from '../types';
 import { Monitor, Moon, Sun } from 'lucide-react';
 
 interface FooterProps {

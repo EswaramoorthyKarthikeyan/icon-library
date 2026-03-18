@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import {
+import type {
     IconData,
     IconAiMetadata,
     Weighting,
@@ -9,7 +9,6 @@ import {
     ViewMode,
 } from "../types";
 import { ICON_LIBRARY } from "../constants";
-import { buildSvgContent } from "../utils/svg";
 import JSZip from "jszip";
 
 interface UseIconLibraryParams {
@@ -50,6 +49,21 @@ export const useIconLibrary = ({
     const [activeCollectionId, setActiveCollectionId] = useState<string | null>(
         null,
     );
+
+    // Error and notification state
+    const [exportError, setExportError] = useState<string | null>(null);
+    const [notification, setNotification] = useState<string | null>(null);
+
+    // Clear error after timeout
+    const clearError = useCallback(() => {
+        setExportError(null);
+    }, []);
+
+    // Show notification with auto-dismiss
+    const showNotification = useCallback((message: string, duration = 3000) => {
+        setNotification(message);
+        setTimeout(() => setNotification(null), duration);
+    }, []);
 
     // Search state
     const [searchQuery, setSearchQuery] = useState("");
@@ -105,15 +119,6 @@ export const useIconLibrary = ({
             const baseName = icon.name.split('-')[0];
             if (!groups[baseName]) groups[baseName] = [];
             groups[baseName].push(icon.id);
-        });
-
-        // Update icons with their variants
-        allIcons.forEach(icon => {
-            const baseName = icon.name.split('-')[0];
-            const variantIds = (groups[baseName] || []).filter(id => id !== icon.id);
-            if (variantIds.length > 0) {
-                icon.variants = variantIds;
-            }
         });
 
         return groups;
@@ -255,7 +260,7 @@ export const useIconLibrary = ({
             `**SVG Path Data:**\n\`\`\`\n${activeIcon.svgPath}\n\`\`\``;
 
         navigator.clipboard.writeText(spec);
-        alert("Full specification copied to clipboard in Markdown format.");
+        showNotification("Specification copied to clipboard");
     }, [activeIcon, aiMetadataCache, settings.aiEnabled, transform]);
 
     /** Helper to render SVG to PNG and download */
@@ -266,20 +271,34 @@ export const useIconLibrary = ({
         const svgBlob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
         const url = URL.createObjectURL(svgBlob);
 
-        img.onload = () => {
-            canvas.width = 512; // High res export
-            canvas.height = 512;
-            if (ctx) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, 512, 512);
-                const pngUrl = canvas.toDataURL("image/png");
-                const a = document.createElement("a");
-                a.href = pngUrl;
-                a.download = `${fileName}.png`;
-                a.click();
-            }
+        // Set up cleanup on load or error
+        const cleanup = () => {
             URL.revokeObjectURL(url);
         };
+
+        img.onload = () => {
+            try {
+                canvas.width = 512; // High res export
+                canvas.height = 512;
+                if (ctx) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, 512, 512);
+                    const pngUrl = canvas.toDataURL("image/png");
+                    const a = document.createElement("a");
+                    a.href = pngUrl;
+                    a.download = `${fileName}.png`;
+                    a.click();
+                }
+            } finally {
+                cleanup();
+            }
+        };
+
+        img.onerror = () => {
+            console.error("Failed to load SVG for PNG conversion");
+            cleanup();
+        };
+
         img.src = url;
     }, []);
 
@@ -336,7 +355,7 @@ export const useIconLibrary = ({
                 URL.revokeObjectURL(url);
             } catch (err) {
                 console.error("Single export failed:", err);
-                alert("Failed to export icon. Check console for details.");
+                setExportError("Failed to export icon. Please try again.");
             }
         },
         [transform, weighting, customFillColor, downloadAsPng],
@@ -351,7 +370,7 @@ export const useIconLibrary = ({
                     : allIcons;
 
             if (itemsToExport.length === 0) {
-                alert("No icons selected for export.");
+                setExportError("No icons selected for export.");
                 return;
             }
 
@@ -409,9 +428,10 @@ export const useIconLibrary = ({
             a.click();
             URL.revokeObjectURL(url);
             console.log("Bulk export completed successfully.");
+            showNotification(`Exported ${itemsToExport.length} icons successfully`);
         } catch (err) {
             console.error("Bulk export failed:", err);
-            alert("Export failed. Check console for details.");
+            setExportError("Export failed. Please try again.");
         }
     }, [
         selectedIds,
@@ -473,5 +493,10 @@ export const useIconLibrary = ({
         handleInvertSelection,
         handleSelectFiltered,
         handleClearSelection,
+
+        // Error handling
+        exportError,
+        clearError,
+        notification,
     };
 };

@@ -1,8 +1,17 @@
 
 import React from 'react';
-import { IconData } from '../types';
-import { Button } from "@/components/ui/button";
+import type { IconData } from '../types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+// Variant type sort order for consistent display
+const VARIANT_SORT_ORDER: Record<string, number> = {
+    outline: 0,
+    filled: 1,
+    duotone: 2,
+    flat: 3,
+    multicolor: 4,
+    unknown: 99
+};
 
 interface VariantSwitcherProps {
     currentIcon: IconData;
@@ -28,8 +37,9 @@ const VariantSwitcher: React.FC<VariantSwitcherProps> = ({
 
     // Group current and variants and sort by type
     const allVariants = [currentIcon, ...variants].sort((a, b) => {
-        const order = { outline: 0, filled: 1, duotone: 2, flat: 3, multicolor: 4 };
-        return (order[a.variantType || 'outline'] || 99) - (order[b.variantType || 'outline'] || 99);
+        const orderA = VARIANT_SORT_ORDER[a.variantType || 'unknown'];
+        const orderB = VARIANT_SORT_ORDER[b.variantType || 'unknown'];
+        return orderA - orderB;
     });
 
     return (
@@ -78,4 +88,4 @@ const VariantSwitcher: React.FC<VariantSwitcherProps> = ({
     );
 };
 
-export default VariantSwitcher;
+export default React.memo(VariantSwitcher);

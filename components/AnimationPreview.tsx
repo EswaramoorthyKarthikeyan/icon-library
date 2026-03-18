@@ -1,20 +1,18 @@
-import React, { useMemo, useEffect, useState } from 'react';
-import { 
-  AnimationType, 
-  AnimationPreset, 
-  ANIMATION_TYPES, 
-  generateKeyframes, 
+import React, { useState } from 'react';
+import type { AnimationType } from '../hooks/useAnimations';
+import {
+  ANIMATION_TYPES,
+  generateKeyframes,
   generateCSSAnimation,
   useAnimations
 } from '../hooks/useAnimations';
-import { IconData, ViewportSize, Weighting, IconTransform } from '../types';
+import type { IconData, ViewportSize, Weighting, IconTransform } from '../types';
 import { getStrokeWidth, getTransformStyle } from '../utils/svg';
-import { 
-  Play, Pause, RotateCcw, Copy, Download, Trash2, Plus, Info,
+import {
+  Play, Pause, RotateCcw, Copy, Download,
   ChevronDown, Zap
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -38,12 +36,9 @@ export const AnimationPreview: React.FC<AnimationPreviewProps> = ({
   onExport,
 }) => {
   const {
-    animations,
     activeAnimationName,
     activeAnimation,
     updateAnimation,
-    createFromPreset,
-    deleteAnimation,
     resetAnimation,
     exportAsCSS,
     exportAnimationAsCSS,
@@ -68,8 +63,8 @@ export const AnimationPreview: React.FC<AnimationPreviewProps> = ({
   const animationCSS = generateKeyframes(activeAnimation.type);
   const animationStyle = generateCSSAnimation(activeAnimation);
 
-  // Generate unique animation name for preview
-  const previewAnimationName = `preview-${activeAnimation.type}-${Date.now()}`;
+  // Generate unique animation name for preview (kept for future use)
+  // const previewAnimationName = `preview-${activeAnimation.type}-${Date.now()}`;
 
   return (
     <div className="flex flex-col gap-4 h-full">

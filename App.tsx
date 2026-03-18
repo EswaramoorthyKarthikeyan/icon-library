@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
-import { TabType, AIProviderId, AIProviderConfig, FilterCriteria, SearchStats, IconData } from './types';
+import type { TabType, AIProviderId, AIProviderConfig, FilterCriteria, IconData } from './types';
 
 // Custom hooks
 import { useSettings } from './hooks/useSettings';
@@ -8,8 +8,8 @@ import { useAI } from './hooks/useAI';
 import { useIconLibrary } from './hooks/useIconLibrary';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { useAccessibility } from './hooks/useAccessibility';
-import { useAutoSave, useRecoveryCheck, getCustomIcons, saveCustomIcon, deleteCustomIcon, getAnnotations } from './hooks/useAutoSave';
-import { useAdvancedSearch, applyFilters as applyAdvancedFilters, calculateFilterStats } from './hooks/useAdvancedSearch';
+import { useAutoSave, useRecoveryCheck, getCustomIcons, saveCustomIcon, getAnnotations } from './hooks/useAutoSave';
+import { applyFilters as applyAdvancedFilters, calculateFilterStats } from './hooks/useAdvancedSearch';
 import { ICON_LIBRARY } from './constants';
 
 // Mobile detection hook
@@ -91,7 +91,7 @@ const App: React.FC = () => {
 		weighting, setWeighting,
 		theme, setTheme,
 		accentColor, setAccentColor,
-		customFillColor, setCustomFillColor,
+		customFillColor,
 		transform, setTransform,
 		settings, handleUpdateSettings,
 		collections, setCollections,
@@ -141,11 +141,6 @@ const App: React.FC = () => {
 	const handleSaveCustomIcon = useCallback(async (icon: IconData) => {
 		await saveCustomIcon(icon);
 		setCustomIcons(prev => [...prev, icon]);
-	}, []);
-
-	const handleDeleteCustomIcon = useCallback(async (id: string) => {
-		await deleteCustomIcon(id);
-		setCustomIcons(prev => prev.filter(i => i.id !== id));
 	}, []);
 
 	// ─── Annotations State ─────────────────────────────────────
@@ -200,7 +195,6 @@ const App: React.FC = () => {
 	}, [library.searchQuery, settings.aiEnabled, settings.semanticSearchEnabled, library.addToSearchHistory]);
 
 	// ─── Advanced Search & Filtering ──────────────────────────
-	const advancedSearch = useAdvancedSearch(library.allIcons);
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
 	const [appliedFilters, setAppliedFilters] = useState<FilterCriteria>({});
 	const [savedFilters, setSavedFilters] = useState<any[]>(() => {
@@ -415,11 +409,14 @@ const App: React.FC = () => {
 		}
 	], [library, canUndo, canRedo, showShortcuts, showSettings, isComparing, isFilterOpen]);
 	// ─── Auto-Save & Recovery ─────────────────────────────────
+	// Convert Set to array for stable dependency tracking
+	const selectedIdsArray = useMemo(() => Array.from(library.selectedIds), [library.selectedIds]);
+	
 	const draftData = useMemo(() => ({
 		activeTab,
 		showSettings,
 		activeIconId,
-		selectedIds: Array.from(library.selectedIds),
+		selectedIds: selectedIdsArray,
 		searchQuery: library.searchQuery,
 		selectedCategory: library.selectedCategory,
 		activeCollectionId: library.activeCollectionId,
@@ -431,17 +428,40 @@ const App: React.FC = () => {
 		customFillColor,
 		transform,
 		collections
-	}), [activeTab, showSettings, activeIconId, library.selectedIds, library.searchQuery, 
+	}), [activeTab, showSettings, activeIconId, selectedIdsArray, library.searchQuery, 
 		library.selectedCategory, library.activeCollectionId, library.viewMode,
 		viewportSize, weighting, theme, accentColor, customFillColor, transform, collections]);
 
-	const { recoveryData, isSaving, lastSaveTime, hasRecovery, recoverDraft, clearRecoveryData } = useAutoSave(draftData, {
+	const { isSaving, lastSaveTime } = useAutoSave(draftData, {
 		enabled: true,
 		interval: 30000, // Auto-save every 30 seconds
 		key: 'icon-library'
 	});
 
-	const { showRecoveryDialog, setShowRecoveryDialog, recoveryDrafts } = useRecoveryCheck();
+	const { showRecoveryDialog: _showRecoveryDialog, setShowRecoveryDialog: _setShowRecoveryDialog, recoveryDrafts: _recoveryDrafts } = useRecoveryCheck();
+
+	// Memoize comparison tool to avoid recreating on every render
+	const comparisonTool = useMemo(() => {
+		if (!isComparing || library.selectedIds.size !== 2) return null;
+		
+		const [idA, idB] = Array.from(library.selectedIds);
+		const iconA = library.allIcons.find(i => i.id === idA);
+		const iconB = library.allIcons.find(i => i.id === idB);
+		
+		if (iconA && iconB) {
+			return (
+				<ComparisonTool 
+					iconA={iconA}
+					iconB={iconB}
+					viewportSize={viewportSize}
+					weighting={weighting}
+					customFillColor={customFillColor}
+					onClose={handleCloseCompare}
+				/>
+			);
+		}
+		return null;
+	}, [isComparing, library.selectedIds, library.allIcons, viewportSize, weighting, customFillColor]);
 
 	return (
 		<ErrorBoundary>
@@ -811,26 +831,7 @@ const App: React.FC = () => {
 					/>
 				)}
 
-				{isComparing && library.selectedIds.size === 2 && (
-					(() => {
-						const [idA, idB] = Array.from(library.selectedIds);
-						const iconA = library.allIcons.find(i => i.id === idA);
-						const iconB = library.allIcons.find(i => i.id === idB);
-						if (iconA && iconB) {
-							return (
-								<ComparisonTool 
-									iconA={iconA}
-									iconB={iconB}
-									viewportSize={viewportSize}
-									weighting={weighting}
-									customFillColor={customFillColor}
-									onClose={handleCloseCompare}
-								/>
-							);
-						}
-						return null;
-					})()
-				)}
+				{comparisonTool}
 
 				<ShortcutLegend 
 					isOpen={showShortcuts} 

@@ -1,11 +1,10 @@
-import React, { useState, useMemo } from 'react';
-import { IconData, ViewportSize, Weighting, IconTransform, IconAiMetadata } from '../types';
+import React, { useState } from 'react';
+import type { IconData, ViewportSize, Weighting, IconTransform, IconAiMetadata } from '../types';
 import { getStrokeWidth, getTransformStyle, resolveIconState } from '../utils/svg';
-import { Copy, Download, Eye, Zap, Info, Loader2, MousePointer2, Fingerprint, Ban } from 'lucide-react';
+import { Copy, Download, Eye, Loader2, MousePointer2, Fingerprint, Ban } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import VariantSwitcher from './VariantSwitcher';
 import IconAnnotations from './IconAnnotations';
 

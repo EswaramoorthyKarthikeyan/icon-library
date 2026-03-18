@@ -158,7 +158,7 @@ export function ensureTabOrder(container: HTMLElement) {
     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
   );
 
-  focusableElements.forEach((el, index) => {
+  focusableElements.forEach((el) => {
     if (!el.getAttribute('tabindex')) {
       el.setAttribute('tabindex', '0');
     }

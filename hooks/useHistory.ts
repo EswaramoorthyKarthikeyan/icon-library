@@ -1,8 +1,41 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
+
+/**
+ * Shallow equality check for two values
+ * Handles primitives, objects, and arrays
+ */
+function shallowEqual<T>(a: T, b: T): boolean {
+  // Handle identical references
+  if (a === b) return true;
+
+  // Handle null/undefined
+  if (a === null || b === null) return a === b;
+  if (typeof a !== 'object' || typeof b !== 'object') return a === b;
+
+  // Handle arrays
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((item, index) => shallowEqual(item, b[index]));
+  }
+
+  // Handle objects
+  if (Array.isArray(a) || Array.isArray(b)) return false;
+
+  const keysA = Object.keys(a as object);
+  const keysB = Object.keys(b as object);
+
+  if (keysA.length !== keysB.length) return false;
+
+  return keysA.every(key => 
+    Object.prototype.hasOwnProperty.call(b, key) && 
+    shallowEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])
+  );
+}
 
 /**
  * useHistory Hook
  * Provides undo/redo functionality for a generic state object.
+ * Uses shallow comparison instead of JSON.stringify for better performance.
  * 
  * @param initialState The initial state to track
  * @param maxDepth Maximum number of history states to keep
@@ -45,10 +78,11 @@ export function useHistory<T>(initialState: T, maxDepth = 50) {
 
   /**
    * Push a new state onto the history stack
+   * Uses shallow comparison for better performance
    */
   const push = useCallback((newState: T) => {
     // If state is identical to present, do nothing
-    if (JSON.stringify(newState) === JSON.stringify(present)) return;
+    if (shallowEqual(newState, present)) return;
 
     setPast([...past, present].slice(-maxDepth));
     setPresent(newState);

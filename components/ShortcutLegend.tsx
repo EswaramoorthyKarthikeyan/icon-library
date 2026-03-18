@@ -64,7 +64,7 @@ const ShortcutLegend: React.FC<ShortcutLegendProps> = ({ isOpen, onClose }) => {
 
                 <div className="border-t border-primary/10 px-6 py-4 bg-muted/20 text-center">
                     <p className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-40 italic">
-                        "Precision through speed"
+                        &quot;Precision through speed&quot;
                     </p>
                 </div>
             </div>

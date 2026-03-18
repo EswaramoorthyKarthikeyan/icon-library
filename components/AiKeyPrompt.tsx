@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { AIProviderId } from '../types';
+import type { AIProviderId } from '../types';
 import { validateProviderKey } from '../hooks/ai-providers/factory';
 import {
     Dialog,

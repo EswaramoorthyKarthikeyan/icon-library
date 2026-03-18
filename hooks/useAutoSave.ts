@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState, useRef } from 'react';
-import { IconData } from '../types';
+import type { IconData } from '../types';
 
 /**
  * Auto-save hook with draft recovery
@@ -31,7 +31,6 @@ const DB_NAME = 'icon-library-db';
 const STORE_NAME = 'drafts';
 const CUSTOM_ICONS_STORE = 'custom_icons';
 const ANNOTATIONS_STORE = 'annotations';
-const RECOVERY_KEY = 'app-recovery';
 
 /**
  * Initialize IndexedDB for storing drafts

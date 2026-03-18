@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { FilterCriteria, SearchStats } from '../types';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import type { FilterCriteria, SearchStats } from '../types';
 
 /**
  * Advanced search and filtering system for the icon library
@@ -139,7 +139,6 @@ export function useAdvancedSearch(allIcons: any[]) {
   const [savedFilters, setSavedFilters] = useState<SearchFilter[]>([]);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
-  const filterIdRef = useRef(0);
 
   // Load saved filters and history from localStorage on mount
   useEffect(() => {

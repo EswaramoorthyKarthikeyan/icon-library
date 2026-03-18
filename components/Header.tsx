@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { TabType, ViewMode } from '../types';
+import type { TabType, ViewMode } from '../types';
 import { Settings, Trash, Check, Plus, LayoutGrid, List } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
@@ -25,7 +25,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({
-  activeTab, setActiveTab, matchCount, totalCount, isSearching, selectedCount, onClearSelection, onSelectAllFiltered, isAllFilteredSelected, onCreateCollection, onOpenSettings, aiEnabled, viewMode, setViewMode, isMobile = false, isSaving = false, lastSaveTime
+  activeTab, setActiveTab, matchCount, totalCount, isSearching: _isSearching, selectedCount, onClearSelection, onSelectAllFiltered, isAllFilteredSelected, onCreateCollection, onOpenSettings, aiEnabled, viewMode, setViewMode, isMobile = false, isSaving = false, lastSaveTime: _lastSaveTime
 }) => {
   const tabs: { id: TabType, label: string }[] = [
     { id: 'grid', label: 'Explorer' },

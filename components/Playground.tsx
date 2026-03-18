@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { IconData, Weighting, IconTransform } from '../types';
+import type { IconData, Weighting, IconTransform } from '../types';
 import { getStrokeWidth, getTransformStyle } from '../utils/svg';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,9 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Check, AlertCircle } from 'lucide-react';
+
+// Processing animation duration in milliseconds
+const PROCESSING_DURATION_MS = 2000;
 
 interface PlaygroundProps {
   icon: IconData | null;
@@ -60,7 +63,7 @@ const Playground: React.FC<PlaygroundProps> = ({ icon, weighting, transform, cus
 
   const handleAction = () => {
     setIsProcessing(true);
-    setTimeout(() => setIsProcessing(false), 2000);
+    setTimeout(() => setIsProcessing(false), PROCESSING_DURATION_MS);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

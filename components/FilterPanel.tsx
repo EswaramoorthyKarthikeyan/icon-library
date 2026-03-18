@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { FilterCriteria, SearchStats } from '../types';
-import { X, ChevronDown, Save, Trash2, RotateCcw } from 'lucide-react';
+import type { FilterCriteria, SearchStats } from '../types';
+import { X, Save, Trash2, RotateCcw } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
